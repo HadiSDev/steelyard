@@ -15,7 +15,7 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
 import { Route as AuthedSettingsRouteImport } from './routes/_authed/settings'
-import { Route as AuthedEntriesRouteImport } from './routes/_authed/entries'
+import { Route as AuthedInvoiceLinesRouteImport } from './routes/_authed/invoice-lines'
 import { Route as AuthedSettingsIndexRouteImport } from './routes/_authed/settings/index'
 import { Route as AuthedSettingsSpendTreesRouteImport } from './routes/_authed/settings/spend-trees'
 import { Route as AuthedSettingsProfileRouteImport } from './routes/_authed/settings/profile'
@@ -53,9 +53,9 @@ const AuthedSettingsRoute = AuthedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedEntriesRoute = AuthedEntriesRouteImport.update({
-  id: '/entries',
-  path: '/entries',
+const AuthedInvoiceLinesRoute = AuthedInvoiceLinesRouteImport.update({
+  id: '/invoice-lines',
+  path: '/invoice-lines',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedSettingsIndexRoute = AuthedSettingsIndexRouteImport.update({
@@ -103,7 +103,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sso-callback': typeof SsoCallbackRoute
   '/ui': typeof UiRoute
-  '/entries': typeof AuthedEntriesRoute
+  '/invoice-lines': typeof AuthedInvoiceLinesRoute
   '/settings': typeof AuthedSettingsRouteWithChildren
   '/settings/companies': typeof AuthedSettingsCompaniesRouteWithChildren
   '/settings/organization': typeof AuthedSettingsOrganizationRoute
@@ -117,7 +117,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/sso-callback': typeof SsoCallbackRoute
   '/ui': typeof UiRoute
-  '/entries': typeof AuthedEntriesRoute
+  '/invoice-lines': typeof AuthedInvoiceLinesRoute
   '/': typeof AuthedIndexRoute
   '/settings/organization': typeof AuthedSettingsOrganizationRoute
   '/settings/profile': typeof AuthedSettingsProfileRoute
@@ -132,7 +132,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sso-callback': typeof SsoCallbackRoute
   '/ui': typeof UiRoute
-  '/_authed/entries': typeof AuthedEntriesRoute
+  '/_authed/invoice-lines': typeof AuthedInvoiceLinesRoute
   '/_authed/settings': typeof AuthedSettingsRouteWithChildren
   '/_authed/': typeof AuthedIndexRoute
   '/_authed/settings/companies': typeof AuthedSettingsCompaniesRouteWithChildren
@@ -150,7 +150,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sso-callback'
     | '/ui'
-    | '/entries'
+    | '/invoice-lines'
     | '/settings'
     | '/settings/companies'
     | '/settings/organization'
@@ -164,7 +164,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sso-callback'
     | '/ui'
-    | '/entries'
+    | '/invoice-lines'
     | '/'
     | '/settings/organization'
     | '/settings/profile'
@@ -178,7 +178,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sso-callback'
     | '/ui'
-    | '/_authed/entries'
+    | '/_authed/invoice-lines'
     | '/_authed/settings'
     | '/_authed/'
     | '/_authed/settings/companies'
@@ -241,11 +241,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSettingsRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/entries': {
-      id: '/_authed/entries'
-      path: '/entries'
-      fullPath: '/entries'
-      preLoaderRoute: typeof AuthedEntriesRouteImport
+    '/_authed/invoice-lines': {
+      id: '/_authed/invoice-lines'
+      path: '/invoice-lines'
+      fullPath: '/invoice-lines'
+      preLoaderRoute: typeof AuthedInvoiceLinesRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/settings/': {
@@ -338,13 +338,13 @@ const AuthedSettingsRouteWithChildren = AuthedSettingsRoute._addFileChildren(
 )
 
 interface AuthedRouteChildren {
-  AuthedEntriesRoute: typeof AuthedEntriesRoute
+  AuthedInvoiceLinesRoute: typeof AuthedInvoiceLinesRoute
   AuthedSettingsRoute: typeof AuthedSettingsRouteWithChildren
   AuthedIndexRoute: typeof AuthedIndexRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
-  AuthedEntriesRoute: AuthedEntriesRoute,
+  AuthedInvoiceLinesRoute: AuthedInvoiceLinesRoute,
   AuthedSettingsRoute: AuthedSettingsRouteWithChildren,
   AuthedIndexRoute: AuthedIndexRoute,
 }

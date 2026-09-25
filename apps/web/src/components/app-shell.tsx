@@ -141,7 +141,7 @@ function UserMenu() {
 /** Sidebar navigation. Entries without a `to` are pages that don't exist yet. */
 export const NAV_ITEMS = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/' },
-  { label: 'Spend Lines', icon: Receipt, to: '/entries' },
+  { label: 'Spend Lines', icon: Receipt, to: '/invoice-lines' },
   { label: 'Vendors', icon: Users },
   { label: 'Settings', icon: Settings, to: '/settings' },
 ] as const

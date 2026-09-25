@@ -86,7 +86,7 @@ function CompaniesSection() {
       integrations={integrations.data ?? []}
       spendTrees={spendTrees.data ?? []}
       onReviewStaleLines={(companyId) =>
-        navigate({ to: '/entries', search: { company_id: companyId } })
+        navigate({ to: '/invoice-lines', search: { company_id: companyId } })
       }
       onCreate={(values) =>
         create.mutateAsync({

@@ -72,11 +72,11 @@ describe('AppSidebar', () => {
   })
 
   it('links Spend Lines to its page, and no longer promises an Invoices one', () => {
-    render(<AppSidebar pathname="/entries" />)
+    render(<AppSidebar pathname="/invoice-lines" />)
 
-    const entries = screen.getByRole('link', { name: 'Spend Lines' })
-    expect(entries.getAttribute('href')).toBe('/entries')
-    expect(entries.getAttribute('aria-current')).toBe('page')
+    const spendLines = screen.getByRole('link', { name: 'Spend Lines' })
+    expect(spendLines.getAttribute('href')).toBe('/invoice-lines')
+    expect(spendLines.getAttribute('aria-current')).toBe('page')
     expect(screen.queryByText('Invoices')).toBeNull()
   })
 })

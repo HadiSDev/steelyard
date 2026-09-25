@@ -29,7 +29,7 @@ import {
 } from '#/lib/entry-search'
 import { vendorsQueryOptions } from '#/lib/api/vendors'
 
-export const Route = createFileRoute('/_authed/entries')({
+export const Route = createFileRoute('/_authed/invoice-lines')({
   component: EntriesPage,
   staticData: { title: 'Spend Lines' },
   validateSearch: validateEntrySearch,
