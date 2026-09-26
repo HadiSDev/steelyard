@@ -8,6 +8,7 @@ import {
   voucherAuditQueryOptions,
   voucherDetailQueryOptions,
   voucherGroupsQueryOptions,
+  voucherSummaryQueryOptions,
 } from '#/lib/api/entries'
 import type { VoucherKey } from '#/lib/api/entries'
 import {
@@ -52,6 +53,7 @@ function EntriesPage() {
     filters.voucher !== undefined || filters.entry !== undefined
 
   const groups = useQuery(voucherGroupsQueryOptions(api, filters))
+  const coverage = useQuery(voucherSummaryQueryOptions(api, filters))
   const companies = useQuery(companiesQueryOptions(api))
   const vendors = useQuery(vendorsQueryOptions(api, { q: vendorQuery }))
   const summary = useQuery(entriesSummaryOptions(api))
@@ -88,6 +90,7 @@ function EntriesPage() {
   return (
     <EntriesPanel
       result={groups.data}
+      coverage={coverage.isError ? [] : coverage.data?.rows}
       loading={groups.isPending}
       error={groups.isError}
       filters={filters}

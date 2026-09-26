@@ -317,6 +317,26 @@ export interface EntrySummaryRow {
   unconverted_count: number
 }
 
+/** Row of `GET /erp-entries/vouchers/summary`: coverage in one base currency. */
+export interface SpendCoverageRow {
+  currency: string
+  voucher_count: number
+  /** Vouchers holding a posting not converted into the base currency, left out of the spend. */
+  unconverted_vouchers: number
+  /** Net expense spend the ERP posted over the listed vouchers. */
+  posted_spend: Money
+  /** Base amount of the lines categorized by the AI or verified by a person. */
+  categorized_spend: Money
+  line_count: number
+  /** AI-categorized plus verified lines. */
+  categorized_lines: number
+  verified_lines: number
+  /** AI-categorized lines below the confidence threshold. */
+  needs_review_lines: number
+  uncategorized_lines: number
+  failed_lines: number
+}
+
 /** Row of `GET /reports/spend-by-category`. */
 export interface CategorySpendRow {
   level_2: string | null

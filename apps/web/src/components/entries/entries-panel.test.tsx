@@ -10,6 +10,7 @@ import type {
   VendorRead,
   VoucherDetailRead,
   VoucherGroupRead,
+  SpendCoverageRow,
 } from '#/lib/api/types'
 
 /** The company's spend tree, matching the line fixture's own path. */
@@ -411,6 +412,7 @@ const DETAIL: VoucherDetailRead = {
 /** Everything a rendered panel needs that no test varies. */
 function common() {
   return {
+    coverage: [] as Array<SpendCoverageRow>,
     loading: false,
     error: false,
     filters: {},
@@ -1136,6 +1138,37 @@ describe('EntriesPanel — filters', () => {
   it('does not treat the page number as a filter', () => {
     setup({ filters: { page: 2 } })
     expect(screen.queryByRole('button', { name: /Clear filters/ })).toBeNull()
+  })
+})
+
+describe('EntriesPanel — spend coverage', () => {
+  const COVERAGE: SpendCoverageRow = {
+    currency: 'DKK',
+    voucher_count: 1,
+    unconverted_vouchers: 0,
+    posted_spend: '1200.00',
+    categorized_spend: '1200.00',
+    line_count: 1,
+    categorized_lines: 1,
+    verified_lines: 0,
+    needs_review_lines: 0,
+    uncategorized_lines: 0,
+    failed_lines: 0,
+  }
+
+  it('sums the listed vouchers above the table', () => {
+    setup({ coverage: [COVERAGE] })
+
+    expect(screen.getByRole('region', { name: 'Posted spend' })).toBeTruthy()
+    expect(
+      screen.getByRole('region', { name: 'Categorized spend' }),
+    ).toBeTruthy()
+  })
+
+  it('leaves the summary out when the list could not load', () => {
+    setup({ coverage: [COVERAGE], error: true })
+
+    expect(screen.queryByRole('region', { name: 'Posted spend' })).toBeNull()
   })
 })
 

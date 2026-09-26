@@ -14,7 +14,9 @@ import type {
   VoucherDetailRead,
   VoucherGroupRead,
   VoucherTab,
+  SpendCoverageRow,
 } from '#/lib/api/types'
+import { SpendCoverage } from './summary/spend-coverage'
 import { FilterBar } from './filter-bar'
 import { VoucherDrawer } from './voucher/voucher-drawer'
 import { VoucherTable } from './voucher-table'
@@ -88,6 +90,8 @@ function EmptyState({
 
 export interface EntriesPanelProps {
   result: Page<VoucherGroupRead> | undefined
+  /** Posted and categorized spend over every listed voucher; undefined while loading. */
+  coverage: Array<SpendCoverageRow> | undefined
   loading: boolean
   error: boolean
   filters: EntryFilters
@@ -131,6 +135,7 @@ export interface EntriesPanelProps {
 /** The Entries page body. */
 export function EntriesPanel({
   result,
+  coverage,
   loading,
   error,
   filters,
@@ -177,6 +182,8 @@ export function EntriesPanel({
         onClear={onClearFilters}
         onVendorSearch={onVendorSearch}
       />
+
+      {error ? null : <SpendCoverage rows={coverage} />}
 
       {error ? (
         <Card className="p-8 text-center">

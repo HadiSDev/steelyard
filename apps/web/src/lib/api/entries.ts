@@ -1,9 +1,11 @@
-import { queryOptions } from '@tanstack/react-query'
+import { keepPreviousData, queryOptions } from '@tanstack/react-query'
 import type { ApiClient } from './api-client'
 import type {
   EntryFilters,
   ErpEntryRead,
   Page,
+  Report,
+  SpendCoverageRow,
   VoucherAuditRead,
   VoucherDetailRead,
   VoucherGroupRead,
@@ -29,6 +31,29 @@ export function voucherGroupsQueryOptions(
     queryKey: [...entriesKey, 'vouchers', query],
     queryFn: () =>
       api.get<Page<VoucherGroupRead>>('/api/v1/erp-entries/vouchers', query),
+  })
+}
+
+/** Posted and categorized spend over every voucher the filters list (`GET /erp-entries/vouchers/summary`). */
+export function voucherSummaryQueryOptions(
+  api: ApiClient,
+  filters: EntryFilters = {},
+) {
+  const {
+    voucher: _voucher,
+    entry: _entry,
+    tab: _tab,
+    page: _page,
+    ...listFilters
+  } = filters
+  return queryOptions({
+    queryKey: [...entriesKey, 'summary', listFilters],
+    queryFn: () =>
+      api.get<Report<SpendCoverageRow>>(
+        '/api/v1/erp-entries/vouchers/summary',
+        listFilters,
+      ),
+    placeholderData: keepPreviousData,
   })
 }
 
