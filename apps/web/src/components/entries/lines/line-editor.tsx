@@ -12,6 +12,7 @@ import {
 import { TreeSelector } from '#/components/spend-tree/tree-selector'
 import { LineStatusBadge } from './line-status'
 import { formatMoney, toNumber } from '#/lib/format/format'
+import { lineName } from '#/lib/format/line'
 import { serverErrorMessage } from '#/lib/form-errors'
 import type {
   InvoiceLineRead,
@@ -195,7 +196,7 @@ export function LineEditor({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-foreground">
-            {line.description ?? 'Untitled line'}
+            {lineName(line) ?? 'Unnamed line'}
           </p>
           <p className="text-sm tabular-nums text-muted-foreground">
             {line.amount !== null ? formatMoney(line.amount, currency) : '—'}

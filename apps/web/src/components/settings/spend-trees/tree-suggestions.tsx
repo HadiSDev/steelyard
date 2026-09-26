@@ -3,6 +3,7 @@ import { ChevronDown, Lightbulb } from 'lucide-react'
 import { Badge, Button, Card, IconButton } from '#/components/ui'
 import { cn } from '#/components/ui/cn'
 import { formatMoney } from '#/lib/format/format'
+import { lineName } from '#/lib/format/line'
 import type { SpendCategorySuggestionRead } from '#/lib/api/types'
 
 export interface TreeSuggestionsProps {
@@ -166,9 +167,7 @@ export function TreeSuggestions({
                             })
                           }
                         >
-                          {line.item_name ??
-                            line.description ??
-                            'Untitled line'}
+                          {lineName(line) ?? 'Unnamed line'}
                         </button>
                         {line.vendor_name ? (
                           <span className="text-xs text-muted-foreground">

@@ -22,6 +22,7 @@ import { LineStatusBadge } from './lines/line-status'
 import { ProvenanceMark } from './lines/provenance-mark'
 import { SpendCategory } from './lines/spend-category'
 import { TotalsMismatchMarker, TotalsMismatchRow } from './totals-mismatch'
+import { lineName } from '#/lib/format/line'
 import { voucherLabel } from '#/lib/format/voucher'
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' })
@@ -169,8 +170,8 @@ function LineHeaderRow() {
 
 /** What to call a line: its name, else its description, else an explicit mark. */
 function LineLabel({ line }: { line: InvoiceLineRead }) {
-  const label = line.item_name ?? line.description
-  if (label === null || label === '') {
+  const label = lineName(line)
+  if (label === null) {
     return <span className="text-muted-foreground">Unnamed line</span>
   }
   return <>{label}</>

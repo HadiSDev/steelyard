@@ -137,3 +137,28 @@ describe('the AI rationale', () => {
     expect(screen.getByText('Chose 7 of 5 candidates.')).toBeTruthy()
   })
 })
+
+describe('the line title', () => {
+  it('names the line by its item name when the description is empty', () => {
+    render(
+      <LineEditor
+        {...base}
+        line={line({ item_name: 'Plus', description: null })}
+      />,
+    )
+
+    expect(screen.getByText('Plus', { selector: 'p' })).toBeTruthy()
+    expect(screen.queryByText('Unnamed line')).toBeNull()
+  })
+
+  it('marks a line with neither name nor description', () => {
+    render(
+      <LineEditor
+        {...base}
+        line={line({ item_name: null, description: '' })}
+      />,
+    )
+
+    expect(screen.getByText('Unnamed line')).toBeTruthy()
+  })
+})
