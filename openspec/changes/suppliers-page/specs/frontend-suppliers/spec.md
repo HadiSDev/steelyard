@@ -2,7 +2,7 @@
 
 ### Requirement: The Suppliers page SHALL show one table of the organization's suppliers
 
-The `/suppliers` route SHALL render, inside the application shell, a table of the suppliers from `GET /api/v1/vendors/overview`, one row per supplier, with the columns **Supplier** (name, and the country code where known), **VAT number**, **What they sell** (the stored description, truncated to one line and shown in full on hover or focus), **Invoices**, **Spend**, and **Last invoice**. Spend SHALL be shown per base currency, never summed across currencies; a supplier with invoices left unconverted SHALL say so beside its amount. Absent values SHALL be shown as an explicit mark rather than an empty cell. The table SHALL keep fixed column widths, so loading, paging or sorting does not reflow it.
+The `/suppliers` route SHALL render, inside the application shell, a table of the suppliers from `GET /api/v1/vendors/overview`, one row per supplier, with the columns **Supplier** (name), **Country** (the country's flag and name, or its code when the name is unknown), **VAT number**, **What they sell** (the stored description, truncated to one line and shown in full on hover or focus), **Invoices**, **Spend**, and **Last invoice**. Spend SHALL be shown per base currency, never summed across currencies; a supplier with invoices left unconverted SHALL say so beside its amount. Absent values SHALL be shown as an explicit mark rather than an empty cell. The table SHALL keep fixed column widths, so loading, paging or sorting does not reflow it.
 
 #### Scenario: A supplier's figures are shown
 

@@ -86,7 +86,7 @@ describe('SuppliersPanel — the table', () => {
     setup()
 
     const cells = within(row('Google Cloud EMEA Limited'))
-    expect(cells.getByText('IE')).toBeTruthy()
+    expect(cells.getByText('Ireland')).toBeTruthy()
     expect(cells.getByText('IE6388047V')).toBeTruthy()
     expect(cells.getByText('Cloud computing and hosting services')).toBeTruthy()
     expect(cells.getByText('12')).toBeTruthy()
@@ -102,14 +102,40 @@ describe('SuppliersPanel — the table', () => {
     ).toBeTruthy()
   })
 
-  it('marks a missing VAT number and date rather than leaving them blank', () => {
+  it('marks a missing country, VAT number and date rather than leaving them blank', () => {
     setup({
-      result: page([supplier({ vat_number: null, last_invoice_date: null })]),
+      result: page([
+        supplier({
+          country_code: null,
+          vat_number: null,
+          last_invoice_date: null,
+        }),
+      ]),
     })
 
     expect(
       within(row('Google Cloud EMEA Limited')).getAllByText('—'),
-    ).toHaveLength(2)
+    ).toHaveLength(3)
+  })
+
+  it('shows the country with its flag in a column of its own', () => {
+    setup()
+
+    const table = screen.getByRole('table')
+    const headers = within(table)
+      .getAllByRole('columnheader')
+      .map((header) => header.textContent)
+    const cell = screen.getByText('Ireland').closest('td')
+    expect(headers[1]).toBe('Country')
+    expect(cell?.querySelector('img')).not.toBeNull()
+  })
+
+  it('falls back to the code for a country it cannot name', () => {
+    setup({ result: page([supplier({ country_code: 'xk' })]) })
+
+    expect(
+      within(row('Google Cloud EMEA Limited')).getByText('XK'),
+    ).toBeTruthy()
   })
 
   it('shows each currency’s spend apart', () => {

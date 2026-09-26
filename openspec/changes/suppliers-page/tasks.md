@@ -15,7 +15,7 @@
 ## 3. Suppliers page (web)
 
 - [x] 3.1 Build `components/suppliers/supplier-spend.tsx`: amounts per currency and the unconverted note
-- [x] 3.2 Build `components/suppliers/supplier-table.tsx`: fixed columns (Supplier, VAT number, What they sell, Invoices, Spend, Last invoice), sortable headers with `aria-sort`, explicit marks for missing values, keyboard-activatable rows
+- [x] 3.2 Build `components/suppliers/supplier-table.tsx`: fixed columns (Supplier, Country with flag, VAT number, What they sell, Invoices, Spend, Last invoice), sortable headers with `aria-sort`, explicit marks for missing values, keyboard-activatable rows
 - [x] 3.3 Build `components/suppliers/suppliers-toolbar.tsx`: debounced search and company filter
 - [x] 3.4 Build `components/suppliers/suppliers-panel.tsx`: toolbar, table, pagination, and the loading, empty ("appear once invoices are synced"), no-match (with clear) and error states
 - [x] 3.5 Add `routes/_authed/suppliers.tsx`: URL state, default sort by spend when the listed companies share a base currency and by name otherwise, and row activation navigating to `/invoice-lines?vendor_id=`

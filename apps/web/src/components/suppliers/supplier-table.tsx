@@ -13,6 +13,7 @@ import type {
   VendorOverviewRead,
 } from '#/lib/api/types'
 import { SortHeader } from './sort-header'
+import { SupplierCountry } from './supplier-country'
 import { SupplierDescription } from './supplier-description'
 import { SupplierSpend } from './supplier-spend'
 
@@ -20,12 +21,13 @@ import { SupplierSpend } from './supplier-spend'
 function SupplierColumns() {
   return (
     <colgroup>
-      <col className="w-[24%]" />
-      <col className="w-[13%]" />
-      <col className="w-[27%]" />
-      <col className="w-[9%]" />
-      <col className="w-[15%]" />
+      <col className="w-[21%]" />
       <col className="w-[12%]" />
+      <col className="w-[12%]" />
+      <col className="w-[22%]" />
+      <col className="w-[8%]" />
+      <col className="w-[14%]" />
+      <col className="w-[11%]" />
     </colgroup>
   )
 }
@@ -57,6 +59,7 @@ export function SupplierTable({
       <TableHeader>
         <TableRow>
           <SortHeader label="Supplier" column="name" {...header} />
+          <TableHead>Country</TableHead>
           <TableHead>VAT number</TableHead>
           <TableHead>What they sell</TableHead>
           <SortHeader
@@ -98,11 +101,9 @@ export function SupplierTable({
               >
                 {supplier.name}
               </button>
-              {supplier.country_code ? (
-                <span className="ml-2 text-xs text-muted-foreground">
-                  {supplier.country_code}
-                </span>
-              ) : null}
+            </TableCell>
+            <TableCell>
+              <SupplierCountry code={supplier.country_code} />
             </TableCell>
             <TableCell className="font-mono text-sm tabular-nums break-all text-muted-foreground">
               {supplier.vat_number ?? '—'}

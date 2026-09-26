@@ -5,7 +5,7 @@ The sidebar has carried a disabled **Vendors** entry since the shell was built, 
 ## What Changes
 
 - Rename the sidebar entry **Vendors** to **Suppliers** and make it a working link to a new `/suppliers` route.
-- Add a **Suppliers** page: one table of every supplier the organization's invoices name, with each supplier's country, VAT number, what they sell (the stored description), how many invoices they sent, the spend on them in base currency, and the date of the last invoice.
+- Add a **Suppliers** page: one table of every supplier the organization's invoices name, with each supplier's country (flag and name), VAT number, what they sell (the stored description), how many invoices they sent, the spend on them in base currency, and the date of the last invoice.
 - The table can be searched by name or VAT number, filtered by company, sorted by name, spend, invoice count or last invoice, and paged. Its state lives in the URL, as Spend Lines' does.
 - Selecting a supplier opens Spend Lines filtered to that supplier.
 - Add a read-only web API endpoint, `GET /api/v1/vendors/overview`, returning the paged, sorted supplier rows with their figures. The existing `GET /api/v1/vendors` (used by the supplier filter) is unchanged.
