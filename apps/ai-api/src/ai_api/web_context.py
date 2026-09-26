@@ -126,7 +126,7 @@ def summarize_supplier(name: str, snippets: str) -> str:
     if not snippets.strip() or snippets == "no info found":
         return ""
     prompt = (
-        f"In one or two sentences, state what the company '{name}' sells or does "
+        f"In one or two sentences, in English, state what the company '{name}' sells or does "
         "— its industry and its main products or services. Write nothing about "
         "any customer of theirs. If the snippets do not identify the company, "
         "reply with exactly: UNKNOWN\n\n"

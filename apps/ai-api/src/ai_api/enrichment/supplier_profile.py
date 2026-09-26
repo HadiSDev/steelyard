@@ -61,6 +61,35 @@ def describe_supplier(
     return SupplierProfile(summarize_snippets_fn(name, snippets), website)
 
 
+def locate_website(
+    name: str,
+    country_code: str | None = None,
+    website: str | None = None,
+    *,
+    search_fn: Callable[[str], list[dict]] = ddg_search,
+    crawl_fn: Callable[[str], str] | None = None,
+    summarize_site_fn: Callable[[str, str | None, str], str] | None = None,
+    cache_dir: str | None = None,
+) -> str | None:
+    """The supplier's website: a known one as it is, else one found for its name that its site confirms.
+
+    Without a crawler nothing found by search can be confirmed, so only a known website is returned.
+    """
+    if website is not None:
+        return website
+    if crawl_fn is None or not (name or "").strip():
+        return None
+    if summarize_site_fn is None:
+        summarize_site_fn = summarize_site
+    results = search_supplier(name, country_code, search_fn=search_fn, cache_dir=cache_dir)
+    site = find_website(name, results)
+    if site is None:
+        return None
+    if _describe_from_site(name, country_code, site, crawl_fn, summarize_site_fn):
+        return site
+    return None
+
+
 def search_supplier(
     name: str,
     country_code: str | None,
@@ -85,9 +114,11 @@ def summarize_site(name: str, country_code: str | None, text: str) -> str:
     where = f" (based in {country_code})" if country_code else ""
     prompt = (
         f"Below is text from a website. Decide whether it is the own website of the "
-        f"company '{name}'{where}. If it is, state in one or two sentences what the "
-        "company sells or does: its industry and its main products or services. "
-        "Write nothing about any customer of theirs.\n\n"
+        f"company '{name}'{where}. A site for one of its products or services, rather "
+        "than for the company itself, does not count. If it is the company's own "
+        "website, state in one or two sentences, in English, what the company sells "
+        "or does: its industry and its main products or services. Write nothing "
+        "about any customer of theirs.\n\n"
         "Reply with only a JSON object and nothing else:\n"
         '{"is_supplier_site": true or false, "description": "..."}\n'
         'When it is not the company\'s own website, use an empty description.\n\n'

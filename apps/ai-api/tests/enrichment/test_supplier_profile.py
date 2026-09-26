@@ -5,12 +5,15 @@ import json
 
 import pytest
 
+from ai_api import config
 from ai_api.enrichment.supplier_profile import (
     SupplierProfile,
     describe_supplier,
     search_supplier,
     site_description,
+    summarize_site,
 )
+from ai_api.web_context import summarize_supplier
 
 RESULTS = [
     {"title": "Dansk Kaffe ApS - Proff", "body": "Dansk Kaffe ApS, CVR 123.", "href": "https://www.proff.dk/firma/123"},
@@ -188,3 +191,30 @@ def test_without_a_stated_website_the_name_is_searched_for_one(tmp_path):
     assert len(calls.searched) == 1
     assert calls.crawled == ["https://danskkaffe.dk/"]
     assert profile.website == "https://danskkaffe.dk/"
+
+
+class _RecordingLlm:
+    def __init__(self, reply: str) -> None:
+        self.reply = reply
+        self.prompts: list[str] = []
+
+    def call(self, messages: list[dict]) -> str:
+        self.prompts.append(messages[0]["content"])
+        return self.reply
+
+
+def test_the_site_is_described_in_english_and_a_product_site_does_not_count(monkeypatch):
+    llm = _RecordingLlm(_answer(True, "Runs trains."))
+    monkeypatch.setattr(config, "get_llm", lambda: llm)
+
+    assert summarize_site("DSB", "DK", "DSB kører tog i Danmark.") == "Runs trains."
+    assert "in English" in llm.prompts[0]
+    assert "one of its products or services" in llm.prompts[0]
+
+
+def test_the_snippets_are_described_in_english(monkeypatch):
+    llm = _RecordingLlm("Runs trains in Denmark.")
+    monkeypatch.setattr(config, "get_llm", lambda: llm)
+
+    assert summarize_supplier("DSB", "DSB er et jernbaneselskab.") == "Runs trains in Denmark."
+    assert "in English" in llm.prompts[0]
