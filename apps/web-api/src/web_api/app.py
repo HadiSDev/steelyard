@@ -21,6 +21,7 @@ from web_api.routers import (
     reports,
     spend_trees,
     users,
+    vendor_detail,
     vendor_overview,
     vendors,
     webhooks,
@@ -68,6 +69,7 @@ def create_app() -> FastAPI:
     app.include_router(users.router)
     app.include_router(vendors.router)
     app.include_router(vendor_overview.router)
+    app.include_router(vendor_detail.router)
     app.include_router(webhooks.router)
     return app
 

@@ -67,3 +67,32 @@ The endpoint SHALL accept `q` (a case-insensitive substring of the name or the V
 
 - **WHEN** several suppliers have equal spend
 - **THEN** they are ordered by name, and each appears on exactly one page
+
+### Requirement: A supplier's detail SHALL be readable by the organizations that bought from it
+
+`GET /api/v1/vendors/{vendor_id}/detail`, optionally narrowed by `company_id`, SHALL return the supplier's name, country, VAT number, description with its source, and website, together with figures over the caller's invoices only: invoice count, first and last invoice date, spend net of VAT per base currency with unconverted invoices counted, line spend grouped by category and base currency largest first, and the ten latest invoices, newest first with undated ones last. A supplier the caller has no invoice from, an unknown supplier, or a foreign `company_id` SHALL be 404.
+
+#### Scenario: Only the caller's figures
+
+- **WHEN** a supplier has invoices to two organizations and one of them reads its detail
+- **THEN** the counts, spend, categories and invoices cover only that organization's invoices
+
+#### Scenario: A supplier the caller never bought from
+
+- **WHEN** the caller reads a supplier that none of its companies has an invoice from
+- **THEN** the response is 404
+
+### Requirement: A supplier's VAT number SHALL be stated internationally
+
+A supplier's VAT number SHALL be stored and returned in its international form: spaces, dots and hyphens removed, upper case, and prefixed with the supplier's country code (`EL` for Greece) unless it already starts with letters. This SHALL hold for numbers synced from an ERP, for a person's correction of an invoice's supplier VAT number (using the country stated in the correction, else the invoice's, else the supplier's), and, through a migration, for numbers already stored. An empty VAT number SHALL be stored as none. A supplier's identity in the catalog SHALL remain keyed on the VAT number as its ERP states it, so that suppliers already stored keep their ids.
+
+#### Scenario: A Danish CVR number from the ERP
+
+- **WHEN** the ERP states a Danish supplier's VAT number as `12 64 44 26`
+- **THEN** it is stored and returned as `DK12644426`
+
+#### Scenario: A number already international
+
+- **WHEN** the ERP states `IE6388047V` for an Irish supplier
+- **THEN** it is stored as `IE6388047V`
+
