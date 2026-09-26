@@ -392,6 +392,40 @@ export interface VendorOverviewRead extends VendorRead {
   spend: Array<VendorSpendRead>
 }
 
+/** An invoice's status, rolled up from its lines. */
+export type InvoiceStatus = 'uncategorized' | 'categorized' | 'verified'
+
+/** What a supplier's lines were categorized as, with their net spend in one base currency. */
+export interface VendorCategorySpendRead {
+  category_id: string | null
+  category_name: string | null
+  currency: string | null
+  amount: Money
+  line_count: number
+}
+
+/** One of a supplier's invoices, in its own currency. */
+export interface VendorInvoiceRead {
+  id: string
+  invoice_number: string | null
+  invoice_date: string | null
+  company_name: string
+  currency: string | null
+  total: Money | null
+  status: InvoiceStatus
+}
+
+/** A supplier with its figures, categories and latest invoices (`GET /vendors/{id}/detail`). */
+export interface VendorDetailRead extends VendorRead {
+  description_source: string | null
+  invoice_count: number
+  first_invoice_date: string | null
+  last_invoice_date: string | null
+  spend: Array<VendorSpendRead>
+  categories: Array<VendorCategorySpendRead>
+  recent_invoices: Array<VendorInvoiceRead>
+}
+
 export type SupplierSort =
   'name' | 'spend' | 'invoice_count' | 'last_invoice_date'
 

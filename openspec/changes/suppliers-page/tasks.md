@@ -18,7 +18,7 @@
 - [x] 3.2 Build `components/suppliers/supplier-table.tsx`: fixed columns (Supplier, Country with flag, VAT number, What they sell, Invoices, Spend, Last invoice), sortable headers with `aria-sort`, explicit marks for missing values, keyboard-activatable rows
 - [x] 3.3 Build `components/suppliers/suppliers-toolbar.tsx`: debounced search and company filter
 - [x] 3.4 Build `components/suppliers/suppliers-panel.tsx`: toolbar, table, pagination, and the loading, empty ("appear once invoices are synced"), no-match (with clear) and error states
-- [x] 3.5 Add `routes/_authed/suppliers.tsx`: URL state, default sort by spend when the listed companies share a base currency and by name otherwise, and row activation navigating to `/invoice-lines?vendor_id=`
+- [x] 3.5 Add `routes/_authed/suppliers.tsx`: URL state, default sort by spend when the listed companies share a base currency and by name otherwise, and row activation opening the supplier (see 6.4)
 - [x] 3.6 Component tests covering each scenario in `frontend-suppliers`
 
 ## 4. Navigation (web)
@@ -30,3 +30,17 @@
 
 - [x] 5.1 Run web-api pytest, and vitest, tsc, eslint and prettier on the web app, with no regressions
 - [ ] 5.2 Check the page in the browser at desktop and phone widths: no horizontal scroll, and no layout shift when sorting, paging or searching
+
+## 6. Supplier detail
+
+- [x] 6.1 Add `GET /api/v1/vendors/{vendor_id}/detail` with its schemas, sharing the net-spend query with the overview, with tests for scoping, figures, categories, latest invoices and 404s
+- [x] 6.2 Add `supplierDetailQueryOptions` (no retry on 404) and the detail types
+- [x] 6.3 Build `components/suppliers/detail/`: header, figures, category breakdown, latest invoices and the panel with its states, with component tests
+- [x] 6.4 Split the route into `suppliers/index.tsx` and `suppliers/$vendorId.tsx`; row activation opens the detail page; regenerate the route tree
+
+## 7. International VAT numbers
+
+- [x] 7.1 Add `web_api.vat.international_vat` with tests
+- [x] 7.2 State VAT numbers internationally on sync and on invoice header corrections, keeping the catalog key on the ERP's own spelling
+- [x] 7.3 Add migration `0014_international_vat_numbers` restating stored supplier and invoice VAT numbers
+

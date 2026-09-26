@@ -14,7 +14,7 @@ import {
   validateSupplierSearch,
 } from '#/lib/supplier-search'
 
-export const Route = createFileRoute('/_authed/suppliers')({
+export const Route = createFileRoute('/_authed/suppliers/')({
   component: SuppliersPage,
   staticData: { title: 'Suppliers' },
   validateSearch: validateSupplierSearch,
@@ -69,8 +69,8 @@ function SuppliersPage() {
       }}
       onSelect={(supplier) => {
         void navigate({
-          to: '/invoice-lines',
-          search: { vendor_id: supplier.id },
+          to: '/suppliers/$vendorId',
+          params: { vendorId: supplier.id },
         })
       }}
     />

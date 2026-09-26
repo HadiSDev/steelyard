@@ -42,7 +42,7 @@ Ordering amounts in DKK against amounts in EUR would be meaningless. Before sort
 
 - `routes/_authed/suppliers.tsx` holds the queries and URL state; `components/suppliers/` holds the presentational pieces (`suppliers-panel.tsx`, `supplier-table.tsx`, `supplier-spend.tsx`, `suppliers-toolbar.tsx`), each with one component per concern.
 - Search params: `q`, `company_id`, `sort`, `order`, `page`, validated in a `lib/supplier-search.ts` like `lib/entry-search.ts`. The search box updates the URL on a short debounce.
-- Row activation navigates to `/invoice-lines` with `vendor_id`, the filter Spend Lines already accepts.
+- Row activation opens `/suppliers/$vendorId`; its "View spend lines" button navigates to `/invoice-lines` with `vendor_id`, the filter Spend Lines already accepts. The route folder holds the list (`index.tsx`) and the detail (`$vendorId.tsx`) as siblings, not a layout.
 - The nav entry becomes `{ label: 'Suppliers', icon: Building2, to: '/suppliers' }`.
 
 ## Risks / Trade-offs

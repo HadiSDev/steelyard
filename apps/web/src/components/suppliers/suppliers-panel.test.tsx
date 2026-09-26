@@ -68,7 +68,7 @@ function setup(overrides: Partial<SuppliersPanelProps> = {}) {
 
 function row(name: string): HTMLElement {
   const button = screen.getByRole('button', {
-    name: `View spend lines for ${name}`,
+    name: `View details for ${name}`,
   })
   const found = button.closest('tr')
   if (found === null) {
@@ -245,7 +245,7 @@ describe('SuppliersPanel — search and filters', () => {
 })
 
 describe('SuppliersPanel — choosing a supplier', () => {
-  it('opens a supplier’s lines from its row', () => {
+  it('opens a supplier from its row', () => {
     const props = setup()
 
     fireEvent.click(row('Google Cloud EMEA Limited'))
@@ -259,7 +259,7 @@ describe('SuppliersPanel — choosing a supplier', () => {
     const props = setup()
 
     const button = screen.getByRole('button', {
-      name: 'View spend lines for Google Cloud EMEA Limited',
+      name: 'View details for Google Cloud EMEA Limited',
     })
     button.focus()
     fireEvent.click(button)

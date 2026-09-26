@@ -96,7 +96,7 @@ export function SupplierTable({
                   event.stopPropagation()
                   onSelect(supplier)
                 }}
-                aria-label={`View spend lines for ${supplier.name}`}
+                aria-label={`View details for ${supplier.name}`}
                 className="text-left font-medium outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {supplier.name}

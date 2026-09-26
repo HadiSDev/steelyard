@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { supplierOverviewQueryOptions } from './vendors'
+import {
+  isSupplierNotFound,
+  supplierDetailQueryOptions,
+  supplierOverviewQueryOptions,
+} from './vendors'
+import { ApiError } from './api-client'
 import type { ApiClient } from './api-client'
 
 function fakeApi() {
@@ -30,5 +35,35 @@ describe('supplierOverviewQueryOptions', () => {
     const { api } = fakeApi()
 
     expect(supplierOverviewQueryOptions(api).placeholderData).toBeDefined()
+  })
+})
+
+describe('supplierDetailQueryOptions', () => {
+  it('asks the detail endpoint for the one supplier', async () => {
+    const { api, get } = fakeApi()
+    const options = supplierDetailQueryOptions(api, 'v/1')
+
+    await options.queryFn!({} as never)
+
+    expect(get).toHaveBeenCalledWith('/api/v1/vendors/v%2F1/detail')
+    expect(options.queryKey).toEqual(['vendors', 'detail', 'v/1'])
+  })
+
+  it('does not retry a supplier that is not the organization’s', () => {
+    const { api } = fakeApi()
+    const retry = supplierDetailQueryOptions(api, 'v1').retry as (
+      failures: number,
+      error: unknown,
+    ) => boolean
+
+    expect(retry(0, new ApiError(404, 'not found'))).toBe(false)
+    expect(retry(0, new ApiError(500, 'failed'))).toBe(true)
+    expect(retry(1, new ApiError(500, 'failed'))).toBe(false)
+  })
+
+  it('tells a missing supplier from any other failure', () => {
+    expect(isSupplierNotFound(new ApiError(404, 'not found'))).toBe(true)
+    expect(isSupplierNotFound(new ApiError(500, 'failed'))).toBe(false)
+    expect(isSupplierNotFound(new Error('offline'))).toBe(false)
   })
 })
