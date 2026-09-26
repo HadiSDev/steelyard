@@ -66,6 +66,11 @@ class ExtractedInvoice(BaseModel):
         default=None,
         description="Supplier company VAT registration number, e.g. 'DK12345678'.",
     )
+    supplier_website: str | None = Field(
+        default=None,
+        description="The supplier's own website as printed, e.g. 'www.acme.dk'; never "
+        "the buyer's, and never an email address.",
+    )
     buyer_country_code: str | None = Field(
         default=None,
         description="Buyer country as an ISO 3166-1 alpha-2 code, read from the "

@@ -23,6 +23,7 @@ class ExtractedLines(BaseModel):
     lines: list[LineItem]
     currency: str | None = None
     invoice_number: str | None = None
+    supplier_website: str | None = None
     total: float | None = None
     tax: float | None = None
     subtotal: float | None = None

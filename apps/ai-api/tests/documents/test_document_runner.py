@@ -498,9 +498,11 @@ def test_doc_status_does_not_disturb_the_categorization_rollup(engine, synced):
     assert invoice.status == before
 
 
-def _extractor_with(lines, *, invoice_number: str | None = None):
+def _extractor_with(lines, *, invoice_number: str | None = None,
+                    supplier_website: str | None = None):
     def _extract(payload: DocumentPayload) -> ExtractedLines:
-        return ExtractedLines(lines=lines, invoice_number=invoice_number)
+        return ExtractedLines(lines=lines, invoice_number=invoice_number,
+                              supplier_website=supplier_website)
 
     return _extract
 
@@ -694,3 +696,13 @@ def test_a_document_stating_no_total_falls_back_to_the_ledger(engine, synced):
 
     assert counts["processed"] == 1
     assert _invoice(engine).document_total is None
+
+
+def test_the_printed_supplier_website_is_kept_on_the_invoice(engine, synced):
+    extract = _extractor_with(
+        [LineItem(description='x', amount=1000.0)], supplier_website='https://danskkaffe.dk/'
+    )
+
+    docs.run_documents(extract=extract)
+
+    assert _invoice(engine).document_supplier_website == 'https://danskkaffe.dk/'

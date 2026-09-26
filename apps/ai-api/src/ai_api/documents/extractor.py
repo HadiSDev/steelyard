@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 from web_api.connectors.base import DocumentPayload
+from web_api.website import site_root
 
 from ..agents import make_extractor
 from ..models import ExtractedInvoice
@@ -18,7 +19,7 @@ from .images import (
     pdf_page_images,
 )
 from .numbers import normalize_numbers
-from .prompts import TOTALS_BLOCK_CHARGES
+from .prompts import SUPPLIER_WEBSITE, TOTALS_BLOCK_CHARGES
 from .vision import look_at
 
 logger = logging.getLogger("ai_api.documents")
@@ -88,6 +89,7 @@ def extract_lines(payload: DocumentPayload, *, kickoff=None, look=None) -> Extra
             "Extract the structured invoice data from the following invoice text. "
             "Leave any missing field null.\n\n"
             + TOTALS_BLOCK_CHARGES
+            + "\n\n" + SUPPLIER_WEBSITE
             + "\n\n" + content.text
         )
     else:
@@ -102,6 +104,7 @@ def extract_lines(payload: DocumentPayload, *, kickoff=None, look=None) -> Extra
         lines=list(extracted.line_items),
         currency=extracted.currency,
         invoice_number=(extracted.invoice_number or "").strip() or None,
+        supplier_website=site_root(extracted.supplier_website),
         total=extracted.total,
         tax=extracted.tax,
         subtotal=extracted.subtotal,

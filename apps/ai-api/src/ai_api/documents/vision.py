@@ -13,7 +13,7 @@ from ..parsing import json_format_hint, parse_model
 from .errors import VisionUnreadableError
 from .images import DocumentImage
 from .numbers import parse_amount
-from .prompts import TOTALS_BLOCK_CHARGES
+from .prompts import SUPPLIER_WEBSITE, TOTALS_BLOCK_CHARGES
 
 logger = logging.getLogger("ai_api.documents")
 
@@ -111,6 +111,10 @@ class VisionPage(BaseModel):
     vendor_name: str | None = Field(default=None, description="Supplier (seller) company name.")
     supplier_country_code: str | None = Field(default=None, description="Supplier country, ISO 3166-1 alpha-2.")
     supplier_vat_number: str | None = Field(default=None, description="Supplier VAT registration number.")
+    supplier_website: str | None = Field(
+        default=None,
+        description="The supplier's own website as printed, e.g. 'www.acme.dk'; never the buyer's, never an email.",
+    )
     buyer_country_code: str | None = Field(default=None, description="Buyer country, ISO 3166-1 alpha-2.")
     buyer_vat_number: str | None = Field(default=None, description="Buyer VAT registration number.")
     invoice_number: str | None = Field(default=None, description="Invoice number as printed.")
@@ -161,6 +165,8 @@ _INSTRUCTIONS = (
     "was booked in.\n"
     "\n"
     + TOTALS_BLOCK_CHARGES
+    + "\n\n"
+    + SUPPLIER_WEBSITE
 )
 
 _PAGE_NOTE = (
@@ -200,6 +206,7 @@ _FIRST_WINS = (
     "vendor_name",
     "supplier_country_code",
     "supplier_vat_number",
+    "supplier_website",
     "buyer_country_code",
     "buyer_vat_number",
     "invoice_number",

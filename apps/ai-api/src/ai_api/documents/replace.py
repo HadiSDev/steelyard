@@ -143,6 +143,7 @@ def replace_invoice_lines(
     recompute_invoice_status(session, invoice.id)
 
     invoice.document_invoice_number = extracted.invoice_number
+    invoice.document_supplier_website = extracted.supplier_website
 
     invoice.document_total = document_total
     invoice.document_tax = document_tax

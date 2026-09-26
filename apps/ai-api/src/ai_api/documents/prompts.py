@@ -1,5 +1,12 @@
 """Prompt text shared by the text and vision extraction paths."""
 
+SUPPLIER_WEBSITE = (
+    "If the document prints the supplier's own website — usually in the header, "
+    "the footer or beside its address — report it as printed. Do not report the "
+    "buyer's website, a payment portal, or an email address as the supplier's "
+    "website, and leave it null when none is printed."
+)
+
 TOTALS_BLOCK_CHARGES = (
     "A charge printed in or beside the totals block — shipping, freight, "
     "postage, packing, handling, a payment or card fee, a surcharge — is a line "
