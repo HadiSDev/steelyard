@@ -46,6 +46,7 @@ from web_api.db.session import engine
 from web_api.fx import CONVERTED, UNCHANGED, UNCONVERTED, FxService
 from web_api.integrations import connector_config as _connector_config
 from web_api.rollup import recompute_invoice_status
+from web_api.vat import international_vat
 from web_api.verified import clear_verified, is_verified
 
 from ..aggregation import engine as aggregation
@@ -155,7 +156,10 @@ def _enabled_account_codes(session: Session, integration_id: str) -> set[str]:
 
 
 def _vendor_key(v: ErpVendorData) -> str:
-    """Global supplier identity: VAT number when present, else the normalized name."""
+    """Global supplier identity: VAT number as the ERP states it when present, else the normalized name.
+
+    The key keeps the ERP's own spelling so that suppliers already stored keep their ids.
+    """
     vat = (v.vat_number or "").strip().lower()
     if vat:
         return f"vat:{vat}"
@@ -175,7 +179,7 @@ def _persist_vendors(
             session.add(row)
         row.name = v.name
         row.country_code = v.country_code
-        row.vat_number = v.vat_number
+        row.vat_number = international_vat(v.vat_number, v.country_code)
         if v.description and row.description_source != _HUMAN_DESCRIPTION:
             row.description = v.description
             row.description_source = _ERP_DESCRIPTION

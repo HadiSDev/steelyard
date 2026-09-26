@@ -283,3 +283,20 @@ def test_a_sync_does_not_overwrite_a_humans_description(
 
     with Session(engine) as s:
         assert s.get(Vendor, vendor_id).description == "Corrected by a person."
+
+
+def test_a_sync_states_a_vat_number_internationally(
+    engine, make_tenant, fake_connector, monkeypatch
+):
+    make_tenant("Acme")
+    stated = [ErpVendorData(
+        erp_id="V-1", name="Contoso ApS", country_code="DK", vat_number="12 64 44 26",
+    )]
+    monkeypatch.setattr(
+        fake_connector, "fetch_vendors", lambda self, since=None: list(stated)
+    )
+
+    runner.run_sync()
+
+    with Session(engine) as s:
+        assert s.exec(select(Vendor)).first().vat_number == "DK12644426"

@@ -17,6 +17,7 @@ from ..audit import INVOICE_AUDIT_FIELDS, INVOICE_BASE_FX_FIELDS, diff_changes, 
 from ..auth.deps import TenantScope, get_session, require_management, resolve_company_ids, tenant_scope
 from ..documents import resolve_document_source
 from ..reconcile import reconcile_lines, totals_agree
+from ..vat import international_vat
 from ..schemas import (
     InvoiceDetailRead, InvoiceLineRead, InvoiceRead, InvoiceUpdate, InvoiceVerify, Page,
 )
@@ -156,6 +157,15 @@ def _apply_header_corrections(
                 detail="That supplier does not exist.",
             )
 
+    if corrections.get("supplier_vat_number") is not None:
+        corrections = {
+            **corrections,
+            "supplier_vat_number": international_vat(
+                corrections["supplier_vat_number"],
+                _supplier_country(session, invoice, corrections),
+            ),
+        }
+
     before = {f: getattr(invoice, f) for f in INVOICE_AUDIT_FIELDS + INVOICE_BASE_FX_FIELDS}
     for field, value in corrections.items():
         setattr(invoice, field, value)
@@ -171,6 +181,17 @@ def _apply_header_corrections(
     after = {f: getattr(invoice, f) for f in INVOICE_AUDIT_FIELDS + INVOICE_BASE_FX_FIELDS}
 
     return diff_changes(before, after, INVOICE_AUDIT_FIELDS + INVOICE_BASE_FX_FIELDS)
+
+
+def _supplier_country(session: Session, invoice: Invoice, corrections: dict) -> str | None:
+    """The supplier's country as the corrected invoice will state it."""
+    if corrections.get("supplier_country_code"):
+        return corrections["supplier_country_code"]
+    if invoice.supplier_country_code:
+        return invoice.supplier_country_code
+    vendor_id = corrections.get("vendor_id") or invoice.vendor_id
+    vendor = session.get(Vendor, vendor_id) if vendor_id is not None else None
+    return vendor.country_code if vendor is not None else None
 
 
 def _read_after_write(session: Session, invoice: Invoice) -> InvoiceRead:

@@ -410,3 +410,23 @@ def test_widening_the_tolerance_moves_the_verdict_without_rewriting_a_row(
         assert s.get(Invoice, seed["inv_a"]).document_total == Decimal("105.00"), (
             "nothing was rewritten"
         )
+
+
+def test_a_corrected_supplier_vat_number_is_stated_internationally(client, seed, engine):
+    _link_vendor(engine, seed["inv_a"], country_code="DK")
+
+    body = client.patch(f"/api/v1/invoices/{seed['inv_a']}",
+                        json={"supplier_vat_number": "12 34 56 78"},
+                        headers=auth("tokA")).json()
+
+    assert body["supplier_vat_number"] == "DK12345678"
+
+
+def test_a_corrected_vat_number_takes_the_corrected_country(client, seed, engine):
+    _link_vendor(engine, seed["inv_a"], country_code="DK")
+
+    body = client.patch(f"/api/v1/invoices/{seed['inv_a']}",
+                        json={"supplier_country_code": "SE", "supplier_vat_number": "556677889901"},
+                        headers=auth("tokA")).json()
+
+    assert body["supplier_vat_number"] == "SE556677889901"
