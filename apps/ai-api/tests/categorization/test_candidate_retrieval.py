@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from sqlmodel import Session, select
 
+from ai_api.categorization.tree import index_tree
 from ai_api.rag import indexer
 from ai_api.sync import llm_categorizer, runner
 from ai_api.sync.categorizer import Category, build_candidates_from_retrieval
@@ -130,7 +131,7 @@ def test_indexing_swallows_a_vector_store_failure(engine, make_tenant, monkeypat
     monkeypatch.setattr(indexer, "build_tree_index", unreachable)
 
     with Session(engine) as s:
-        runner._index_tree(s, tenant["company_id"])
+        index_tree(s, tenant["company_id"])
 
 
 def test_a_sync_categorizes_with_the_whole_tree_when_retrieval_is_down(

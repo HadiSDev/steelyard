@@ -6,7 +6,6 @@ import logging
 import uuid
 from datetime import date, datetime, timezone
 from decimal import Decimal
-from functools import lru_cache
 from typing import Optional
 
 from sqlalchemy import or_
@@ -38,7 +37,6 @@ from web_api.db.models import (
     InvoiceStatus,
     LineOrigin,
     LineStatus,
-    SpendCategory,
     SyncState,
     Vendor,
 )
@@ -50,20 +48,11 @@ from web_api.integrations import connector_config as _connector_config
 from web_api.rollup import recompute_invoice_status
 from web_api.verified import clear_verified, is_verified
 
-from .. import config as ai_config
 from ..aggregation import engine as aggregation
-from ..persistence import CategorizationCache, LineGroundTruth
+from ..categorization.company import categorize_integration
 from ..procurement_agent import recommender
-from ..rag import indexer
 from ..redundancy import detector as redundancy
-from .cache import question_key, question_sample, tree_hash
-from .categorizer import (
-    Category,
-    CategoryMatch,
-    build_candidates_from_retrieval,
-    build_candidates_from_tree,
-)
-from .llm_categorizer import CategorizerUnavailable, LineContext, categorize_line
+from .integrations import connected_integrations
 
 logger = logging.getLogger("ai_api.sync")
 
@@ -91,19 +80,6 @@ _HUMAN_DESCRIPTION = "human"
 _ERP_DESCRIPTION = "erp"
 
 
-def _retrieve_for(company):
-    """A retrieval callable bound to this company's tree, or one that finds nothing."""
-    if company is None or company.spend_tree_id is None:
-        return lambda query, top_k: []
-    if not ai_config.CATEGORY_RETRIEVAL_ENABLED:
-        return lambda query, top_k: []
-
-    def retrieve(query: str, top_k: int):
-        return indexer.retrieve_categories(query, company.spend_tree_id, top_k=top_k)
-
-    return retrieve
-
-
 def _det_id(*parts: str) -> str:
     return str(uuid.uuid5(_NS, ":".join(parts)))
 
@@ -129,22 +105,6 @@ def _safe_convert(counts: dict[str, int], convert) -> None:
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
-
-
-def connected_integrations(
-    session: Session, integration_id: str | None = None
-) -> list[ErpIntegration]:
-    """Every integration that should be synced."""
-    statement = select(ErpIntegration).where(ErpIntegration.disconnected_at.is_(None))
-    if integration_id is not None:
-        statement = statement.where(ErpIntegration.id == integration_id)
-    rows = session.exec(statement.order_by(ErpIntegration.created_at, ErpIntegration.id)).all()
-    if integration_id is not None and not rows:
-        raise ValueError(
-            f"No connected ERP integration with id {integration_id!r}. "
-            "The runner only syncs integrations that already exist and are connected."
-        )
-    return list(rows)
 
 
 def _resolve_since(state: SyncState, override: date | None) -> date | None:
@@ -600,65 +560,6 @@ def _persist_standin_lines(
     return n_written
 
 
-def _tree_candidates(session: Session, company_id: str) -> list | None:
-    """The candidate set for a company: the nodes of the tree it is assigned."""
-    company = session.get(Company, company_id)
-    if company is None or company.spend_tree_id is None:
-        return None
-    nodes = session.exec(
-        select(SpendCategory).where(
-            SpendCategory.spend_tree_id == company.spend_tree_id
-        )
-    ).all()
-    if not nodes:
-        return None
-    return build_candidates_from_tree(nodes)
-
-
-@lru_cache(maxsize=256)
-def _hash_for(offered: tuple[Category, ...]) -> str:
-    """The candidate set's digest, memoised per distinct set."""
-    return tree_hash(offered)
-
-
-def _match_from_cache(row: CategorizationCache, offered: list) -> CategoryMatch:
-    """Rebuild an answer from a cached row, against the set it was given for."""
-    node = next((c for c in offered if c.node_id == row.spend_category_id), None)
-    if node is None:
-        raise CategorizerUnavailable(
-            "a cached answer names a category that is no longer offered"
-        )
-    return CategoryMatch(
-        matched=True,
-        spend_category_id=node.node_id,
-        account_code=node.code,
-        account_name=node.name,
-        level_1=node.level(0), level_2=node.level(1),
-        level_3=node.level(2), level_4=node.level(3),
-        confidence=row.confidence or 0.0,
-        rationale=row.rationale or "",
-        gt_level_1=None, gt_level_2=None, gt_level_3=None, gt_account_code=None,
-    )
-
-
-def _index_tree(session: Session, company_id: str) -> None:
-    """Embed the company's tree for candidate retrieval."""
-    if not ai_config.CATEGORY_RETRIEVAL_ENABLED:
-        return
-    company = session.get(Company, company_id)
-    if company is None or company.spend_tree_id is None:
-        return
-    try:
-        nodes = session.exec(
-            select(SpendCategory).where(
-                SpendCategory.spend_tree_id == company.spend_tree_id
-            )
-        ).all()
-        indexer.build_tree_index(list(nodes), company.spend_tree_id)
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("    could not index the spend tree (%s); offering it whole", exc)
-
-
 def _withdraw_voided_vouchers(
     session: Session, integration_id: str, voucher_ids: set[str]
 ) -> int:
@@ -690,178 +591,6 @@ def _withdraw_voided_vouchers(
         logger.info("    withdrew %d posting(s) from %d voided voucher(s)",
                     len(entries), len(voucher_ids))
     return len(entries)
-
-
-def _categorize_pending(
-    session: Session, integration_id: str, company_id: str, candidates: list
-) -> dict[str, int]:
-    """Categorize every uncategorized line for the integration."""
-    invoice_ids = [
-        iid for iid in session.exec(
-            select(ErpEntry.source_invoice_id)
-            .join(ErpAccount, ErpEntry.erp_account_id == ErpAccount.id)
-            .where(
-                ErpAccount.erp_integration_id == integration_id,
-                ErpEntry.source_invoice_id.is_not(None),
-            )
-            .distinct()
-        ).all()
-    ]
-    invoices = session.exec(
-        select(Invoice).where(Invoice.id.in_(invoice_ids))
-    ).all() if invoice_ids else []
-
-    account_names = {
-        code: name for code, name in session.exec(
-            select(ErpAccount.erp_account_code, ErpAccount.erp_account_name)
-            .where(ErpAccount.erp_integration_id == integration_id)
-        ).all()
-    }
-    vendors: dict[str, tuple[str, str | None]] = {}
-
-    company = session.get(Company, company_id)
-    buyer_name = company.name if company else None
-    narrowed_total = 0
-    lines_seen = 0
-
-    stats = {"categorized": 0, "failed": 0, "invoices_completed": 0, "invoices_failed": 0}
-    for inv in invoices:
-        lines = session.exec(
-            select(InvoiceLine).where(InvoiceLine.invoice_id == inv.id)
-        ).all()
-        pending = [ln for ln in lines if ln.status == LineStatus.UNCATEGORIZED]
-        if not pending:
-            continue
-
-        any_failed = False
-        for ln in pending:
-            if inv.vendor_id and inv.vendor_id not in vendors:
-                vendor = session.get(Vendor, inv.vendor_id)
-                vendors[inv.vendor_id] = (
-                    (vendor.name, vendor.description) if vendor else ("", None)
-                )
-            vendor_name, vendor_description = vendors.get(inv.vendor_id or "", ("", None))
-            offered = build_candidates_from_retrieval(
-                " ".join(part for part in (ln.item_name, ln.description) if part),
-                candidates,
-                _retrieve_for(company),
-                top_k=ai_config.CATEGORY_RETRIEVAL_TOP_K,
-            )
-            narrowed_total += len(candidates) - len(offered)
-            lines_seen += 1
-
-            supplier_name = vendor_name or (inv.supplier_name if inv else None)
-            key = question_key(
-                ln.item_name, ln.description, supplier_name, ln.native_account_code,
-                vendor_description,
-            )
-            offered_hash = _hash_for(tuple(offered))
-            cached = session.exec(
-                select(CategorizationCache).where(
-                    CategorizationCache.question_key == key,
-                    CategorizationCache.tree_hash == offered_hash,
-                )
-            ).first()
-            context = LineContext(
-                item_name=ln.item_name,
-                description=ln.description,
-                native_account_code=ln.native_account_code,
-                native_account_name=account_names.get(ln.native_account_code or ""),
-                supplier=vendor_name or inv.supplier_name,
-                supplier_description=vendor_description,
-                buyer=buyer_name,
-                amount=ln.amount,
-                currency=inv.currency,
-            )
-            try:
-                match = (
-                    _match_from_cache(cached, offered)
-                    if cached is not None
-                    else categorize_line(context, offered)
-                )
-            except CategorizerUnavailable as exc:
-                logger.warning("    categorizer unavailable, stopping: %s", exc)
-                stats["unavailable"] = str(exc)
-                session.commit()
-                return stats
-
-            before = {f: getattr(ln, f) for f in LINE_AUDIT_FIELDS}
-
-            gt = session.exec(
-                select(LineGroundTruth).where(
-                    LineGroundTruth.invoice_line_id == ln.id
-                )
-            ).first()
-            if gt is None:
-                gt = LineGroundTruth(invoice_line_id=ln.id)
-                session.add(gt)
-            gt.gt_level_1 = match.gt_level_1
-            gt.gt_level_2 = match.gt_level_2
-            gt.gt_level_3 = match.gt_level_3
-            gt.gt_account_code = match.gt_account_code
-
-            if match.matched:
-                ln.level_1 = match.level_1
-                ln.level_2 = match.level_2
-                ln.level_3 = match.level_3
-                ln.level_4 = match.level_4
-                ln.account_code = match.account_code
-                ln.account_name = match.account_name
-                ln.confidence = _dec(match.confidence)
-                ln.rationale = match.rationale
-                ln.spend_category_id = match.spend_category_id
-                ln.status = LineStatus.AI_CATEGORIZED
-                ln.error_message = None
-                stats["categorized"] += 1
-                if cached is None:
-                    stats["cache_misses"] = stats.get("cache_misses", 0) + 1
-                    session.add(CategorizationCache(
-                        question_key=key, tree_hash=offered_hash,
-                        spend_category_id=match.spend_category_id,
-                        confidence=match.confidence, rationale=match.rationale,
-                        question_sample=question_sample(
-                            ln.item_name, supplier_name, ln.native_account_code
-                        ),
-                    ))
-                else:
-                    stats["cache_hits"] = stats.get("cache_hits", 0) + 1
-            else:
-                ln.rationale = match.rationale
-                ln.status = LineStatus.AI_FAILED
-                ln.error_message = match.rationale
-                any_failed = True
-                stats["failed"] += 1
-            session.add(ln)
-
-            after = {f: getattr(ln, f) for f in LINE_AUDIT_FIELDS}
-            record_audit(
-                session,
-                entity_type="invoice_line",
-                entity_id=ln.id,
-                action="ai_categorize",
-                actor=SYSTEM_ACTOR,
-                changes=diff_changes(before, after, LINE_AUDIT_FIELDS),
-            )
-
-        recompute_invoice_status(session, inv.id)
-        if any_failed:
-            stats["invoices_failed"] += 1
-        else:
-            stats["invoices_completed"] += 1
-
-    if lines_seen:
-        tree_size = len(candidates)
-        average = narrowed_total / lines_seen
-        logger.info(
-            "    candidates: tree=%d avg_offered=%.1f avg_reduction=%.0f%% lines=%d",
-            tree_size,
-            tree_size - average,
-            100.0 * average / tree_size if tree_size else 0.0,
-            lines_seen,
-        )
-
-    session.commit()
-    return stats
 
 
 def _call_stub(label: str, fn, *args) -> object:
@@ -986,24 +715,8 @@ def _sync_one(
                     fx_counts[UNCONVERTED], fx_counts[UNCHANGED])
 
         logger.info("  [3/6] Categorizing pending invoice lines…")
-        candidates = _tree_candidates(session, company_id)
-        _index_tree(session, company_id)
-        categorization_skipped = None
-        if candidates is None:
-            categorization_skipped = (
-                "no spend tree assigned to this company; lines were left uncategorized"
-            )
-            cat_stats = {
-                "categorized": 0, "failed": 0,
-                "invoices_completed": 0, "invoices_failed": 0,
-                "skipped": categorization_skipped,
-            }
-            logger.warning("    skipped: %s", categorization_skipped)
-        else:
-            cat_stats = _categorize_pending(session, integration_id, company_id, candidates)
-            logger.info("    categorized=%d failed=%d (invoices: %d completed, %d failed)",
-                        cat_stats["categorized"], cat_stats["failed"],
-                        cat_stats["invoices_completed"], cat_stats["invoices_failed"])
+        cat_stats = categorize_integration(session, integration_id, company_id)
+        categorization_skipped = cat_stats.get("skipped")
 
         logger.info("  [4/6] Aggregating spend…")
         _call_stub("spend_by_category", aggregation.spend_by_category, company_id)

@@ -82,6 +82,11 @@ def _crashing_extractor(payload: DocumentPayload) -> ExtractedLines:
     raise RuntimeError("extraction crashed")
 
 
+def _outcomes(counts: dict[str, int]) -> dict[str, int]:
+    """The read outcomes of a report, without its categorization counts."""
+    return {key: counts[key] for key in ("processed", "failed", "rejected")}
+
+
 def _invoice(engine) -> Invoice:
     with Session(engine) as s:
         return s.exec(select(Invoice)).one()
@@ -110,7 +115,7 @@ def test_an_invoice_with_no_document_is_never_picked_up(engine, fake_connector, 
 
     counts = docs.run_documents(extract=_extractor("1000.00"))
 
-    assert counts == {"processed": 0, "failed": 0, "rejected": 0}
+    assert _outcomes(counts) == {"processed": 0, "failed": 0, "rejected": 0}
     assert _invoice(engine).doc_status == DocStatus.NOT_APPLICABLE
 
 
@@ -124,7 +129,7 @@ def test_a_selector_narrows_but_never_invents(engine, synced):
 
     counts = docs.run_documents(invoice_id=invoice_id, extract=_extractor("1000.00"))
 
-    assert counts == {"processed": 0, "failed": 0, "rejected": 0}
+    assert _outcomes(counts) == {"processed": 0, "failed": 0, "rejected": 0}
 
 
 def test_the_attempt_ceiling_stops_the_retrying(engine, synced, monkeypatch):
@@ -137,7 +142,7 @@ def test_the_attempt_ceiling_stops_the_retrying(engine, synced, monkeypatch):
 
     counts = docs.run_documents(extract=_extractor("1000.00"))
 
-    assert counts == {"processed": 0, "failed": 0, "rejected": 0}
+    assert _outcomes(counts) == {"processed": 0, "failed": 0, "rejected": 0}
 
 
 def test_an_abandoned_claim_is_picked_up_again(engine, synced, monkeypatch):
@@ -165,7 +170,7 @@ def test_a_fresh_claim_is_left_alone(engine, synced, monkeypatch):
 
     counts = docs.run_documents(extract=_extractor("1000.00"))
 
-    assert counts == {"processed": 0, "failed": 0, "rejected": 0}
+    assert _outcomes(counts) == {"processed": 0, "failed": 0, "rejected": 0}
 
 
 def test_the_invoice_is_claimed_before_the_document_is_fetched(engine, synced):
@@ -332,7 +337,7 @@ def test_one_bad_invoice_does_not_stop_the_run(engine, fake_connector, make_tena
 
     counts = docs.run_documents(extract=_extract)
 
-    assert counts == {"processed": 1, "failed": 1, "rejected": 0}
+    assert _outcomes(counts) == {"processed": 1, "failed": 1, "rejected": 0}
 
 
 def test_the_cli_exits_non_zero_when_an_invoice_failed(engine, synced, monkeypatch):
@@ -354,7 +359,7 @@ def test_standins_are_fully_replaced(engine, synced):
         "extracted line would double-count the invoice"
     )
     assert all(l.status == LineStatus.UNCATEGORIZED for l in lines), (
-        "the stage never categorizes; the categorizer does, on its own schedule"
+        "with no spend tree assigned, the extracted lines stay uncategorized"
     )
 
 
@@ -660,7 +665,7 @@ def test_a_line_keeps_the_tax_figures_its_document_printed(engine, synced):
 def test_a_ledger_disagreement_is_accepted_and_flagged(engine, synced):
     counts = docs.run_documents(extract=_aquatuning())
 
-    assert counts == {"processed": 1, "failed": 0, "rejected": 0}
+    assert _outcomes(counts) == {"processed": 1, "failed": 0, "rejected": 0}
 
     invoice = _invoice(engine)
     assert invoice.doc_status == DocStatus.PROCESSED

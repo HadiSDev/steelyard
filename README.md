@@ -96,6 +96,30 @@ rebuild:
 rm -rf chroma_db
 ```
 
+## Run the app
+
+The app needs two long-running processes next to the database: the web API and
+the pipeline worker. Start each in its own terminal:
+
+```bash
+# Web API (http://localhost:8100), from apps/web-api
+cd apps/web-api && uv run src/web_api/app.py
+
+# Pipeline worker: executes the runs a system admin requests from
+# Settings -> Companies, and reads pending documents on its own
+uv run python -m ai_api.worker
+
+# One pass only (handy for scripts and checks)
+uv run python -m ai_api.worker --once
+```
+
+Without the worker, requested runs stay `queued`. It polls every
+`WORKER_POLL_SECONDS` (default `5`) when idle and reads at most
+`WORKER_DOCUMENT_BATCH` (default `5`) pending documents per pass, so a requested
+run never waits behind a long backlog. The stage CLIs
+(`python -m ai_api.sync.runner`, `python -m ai_api.documents.runner`) keep
+working on their own.
+
 ## Test
 
 ```bash

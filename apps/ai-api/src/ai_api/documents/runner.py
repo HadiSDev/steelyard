@@ -17,6 +17,7 @@ from web_api.fx import FxService
 from web_api.fx.service import convert as fx_convert
 
 from .. import config
+from ..categorization.company import categorize_company
 from .currency import conversion_rate
 from .errors import EmptyDocumentError, UnsupportedMediaError, VisionUnreadableError
 from .extractor import extract_lines
@@ -171,6 +172,38 @@ def process_invoice(
     return "processed"
 
 
+def empty_report() -> dict[str, int]:
+    """The document stage's report before any invoice has been read."""
+    return {
+        "processed": 0,
+        "failed": 0,
+        "rejected": 0,
+        "categorized": 0,
+        "categorization_failed": 0,
+        "categorization_skipped": 0,
+        "categorization_errors": 0,
+    }
+
+
+def _categorize_read(session: Session, invoice: Invoice, counts: dict[str, int]) -> None:
+    """Categorize the lines a successful read created, never undoing the read."""
+    invoice_id = invoice.id
+    try:
+        stats = categorize_company(session, invoice.company_id, invoice_ids=[invoice_id])
+    except Exception as exc:  # noqa: BLE001
+        session.rollback()
+        logger.warning("  invoice %s: categorization failed, lines left uncategorized: %s",
+                       invoice_id, exc)
+        counts["categorization_errors"] += 1
+        return
+    counts["categorized"] += stats["categorized"]
+    counts["categorization_failed"] += stats["failed"]
+    if "skipped" in stats:
+        counts["categorization_skipped"] += 1
+    if "unavailable" in stats:
+        counts["categorization_errors"] += 1
+
+
 def run_documents(
     *,
     company_id: str | None = None,
@@ -178,8 +211,8 @@ def run_documents(
     limit: int | None = None,
     extract=extract_lines,
 ) -> dict[str, int]:
-    """Process every pending invoice. Returns counts by outcome."""
-    counts = {"processed": 0, "failed": 0, "rejected": 0}
+    """Process every pending invoice. Returns counts by outcome and categorization."""
+    counts = empty_report()
 
     with Session(engine) as session:
         work = pending_invoices(
@@ -201,7 +234,9 @@ def run_documents(
                 session.rollback()
                 _fail(session, invoice, f"extraction crashed: {exc}")
                 outcome = "failed"
-            counts[outcome] = counts.get(outcome, 0) + 1
+            counts[outcome] += 1
+            if outcome == "processed":
+                _categorize_read(session, invoice, counts)
 
     return counts
 

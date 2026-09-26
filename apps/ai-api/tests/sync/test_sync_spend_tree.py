@@ -7,10 +7,11 @@ import pytest
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine, select
 
+from ai_api.categorization.lines import categorize_lines as _categorize_pending
+from ai_api.categorization.tree import tree_candidates as _tree_candidates
 from ai_api.sync import llm_categorizer
 from ai_api.sync.categorizer import build_candidates_from_tree, default_candidates
 from ai_api.sync.llm_categorizer import LineContext, categorize_line
-from ai_api.sync.runner import _categorize_pending, _tree_candidates
 from web_api.db.models import (
     Company,
     ErpAccount,

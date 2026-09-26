@@ -71,6 +71,10 @@ DOC_VISION_PAGE_BANDS = int(os.getenv("DOC_VISION_PAGE_BANDS", "3"))
 
 DOC_VISION_MAX_IMAGES = int(os.getenv("DOC_VISION_MAX_IMAGES", "12"))
 
+WORKER_POLL_SECONDS = float(os.getenv("WORKER_POLL_SECONDS", "5"))
+
+WORKER_DOCUMENT_BATCH = int(os.getenv("WORKER_DOCUMENT_BATCH", "5"))
+
 
 def get_llm() -> LLM:
     """Return a CrewAI LLM pointed at the local vLLM OpenAI-compatible endpoint."""
