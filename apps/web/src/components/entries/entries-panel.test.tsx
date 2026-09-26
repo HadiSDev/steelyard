@@ -529,6 +529,21 @@ describe('EntriesPanel — voucher rows', () => {
     expect(screen.queryByText(/TIf8g2QF/)).toBeNull()
   })
 
+  it('fixes its column widths, so expanding a voucher cannot reflow the table', () => {
+    setup({
+      result: { items: [VOUCHER, SPLIT], page: 1, page_size: 25, total: 2 },
+    })
+    const table = screen.getByRole('table')
+    const columns = table.querySelectorAll('colgroup > col')
+
+    expect(table.className).toContain('table-fixed')
+    expect(columns).toHaveLength(8)
+    fireEvent.click(
+      screen.getByRole('button', { name: /Expand voucher V-SPLIT/ }),
+    )
+    expect(table.querySelectorAll('colgroup > col')).toHaveLength(8)
+  })
+
   it('gives a voucherless posting no expand affordance', () => {
     setup({ result: { items: [LONE], page: 1, page_size: 25, total: 1 } })
     expect(screen.getByText('No voucher')).toBeTruthy()

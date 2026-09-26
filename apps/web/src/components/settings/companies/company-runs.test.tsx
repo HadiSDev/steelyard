@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastProvider } from '#/components/ui'
 import { ApiError } from '#/lib/api/api-client'
@@ -128,6 +134,20 @@ describe('CompaniesPanel — pipeline runs for everyone else', () => {
     ).toBeNull()
     expect(screen.queryByText('No pipeline runs yet')).toBeNull()
     expect(get).not.toHaveBeenCalled()
+  })
+})
+
+describe('CompaniesPanel — layout', () => {
+  it('fixes its column widths, so a changing run status cannot reflow the table', async () => {
+    renderPanel({ canRunPipelines: true })
+
+    const table = await screen.findByRole('table')
+    const headers = within(table).getAllByRole('columnheader')
+
+    expect(table.className).toContain('table-fixed')
+    expect(table.querySelectorAll('colgroup > col')).toHaveLength(
+      headers.length,
+    )
   })
 })
 

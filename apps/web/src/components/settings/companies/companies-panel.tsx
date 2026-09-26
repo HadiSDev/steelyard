@@ -74,6 +74,20 @@ import type { RecomputeState } from './recompute-dialog'
 import { StaleLinesDialog } from './stale-lines-dialog'
 import type { StaleLinesState } from './stale-lines-dialog'
 
+/** Fixed column widths, so a row's changing run status never reflows the table. */
+function CompanyColumns({ withActions }: { withActions: boolean }) {
+  return (
+    <colgroup>
+      <col className={withActions ? 'w-[32%]' : 'w-[40%]'} />
+      <col className="w-[14%]" />
+      <col className="w-[10%]" />
+      <col className="w-[16%]" />
+      <col className={withActions ? 'w-[12%]' : 'w-[20%]'} />
+      {withActions ? <col className="w-[16%]" /> : null}
+    </colgroup>
+  )
+}
+
 export interface CompaniesPanelProps {
   companies: Array<CompanyRead>
   loading?: boolean
@@ -406,7 +420,8 @@ export function CompaniesPanel({
             ) : null}
           </div>
         ) : (
-          <Table>
+          <Table className="table-fixed">
+            <CompanyColumns withActions={canManage} />
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>

@@ -134,6 +134,22 @@ function InvoiceNumber({ group }: { group: VoucherGroupRead }) {
   )
 }
 
+/** Fixed column widths shared by voucher rows and the line rows they expand to. */
+function VoucherColumns() {
+  return (
+    <colgroup>
+      <col className="w-10" />
+      <col className="w-[22%]" />
+      <col className="w-[10%]" />
+      <col className="w-[7%]" />
+      <col className="w-[10%]" />
+      <col className="w-[23%]" />
+      <col className="w-[13%]" />
+      <col className="w-[15%]" />
+    </colgroup>
+  )
+}
+
 /** Column headers for the lines a group expands to. */
 function LineHeaderRow() {
   return (
@@ -170,7 +186,7 @@ function LineRow({
   return (
     <TableRow className="cursor-pointer bg-muted/25" onClick={onSelect}>
       <TableCell />
-      <TableCell className="pl-8">
+      <TableCell className="pl-8 break-words">
         <button
           type="button"
           onClick={(event) => {
@@ -236,7 +252,8 @@ export function VoucherTable({ groups, onSelectEntry }: VoucherTableProps) {
   }
 
   return (
-    <Table>
+    <Table className="table-fixed">
+      <VoucherColumns />
       <TableHeader>
         <TableRow>
           <TableHead className="w-10" />
@@ -300,7 +317,7 @@ export function VoucherTable({ groups, onSelectEntry }: VoucherTableProps) {
                     </Badge>
                   ) : null}
                 </TableCell>
-                <TableCell>
+                <TableCell className="break-all">
                   <InvoiceNumber group={group} />
                 </TableCell>
                 <TableCell colSpan={3}>
