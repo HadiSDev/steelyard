@@ -4,7 +4,8 @@ A supplier's description is written today from DuckDuckGo result snippets: a few
 
 ## What Changes
 
-- Enrichment finds the supplier's **own website** from the search results, choosing a result whose domain matches the supplier's name and skipping directories, registries and social networks.
+- The invoice parser reads the **supplier's website** the document prints; enrichment crawls that site first.
+- Otherwise, enrichment finds the supplier's **own website** from the search results, choosing a result whose domain matches the supplier's name and skipping directories, registries and social networks.
 - It crawls that site with **Crawl4AI**: the home page plus up to a few same-site pages about the company, its products or its services, as clean Markdown, respecting `robots.txt`.
 - The LLM writes the description from the site's text, and confirms the site belongs to the supplier; a site that does not is discarded.
 - When no site is found, the crawl fails or the site is not the supplier's, enrichment falls back to today's snippet summary, so no supplier ends up worse described than it is now.
@@ -18,6 +19,7 @@ A supplier's description is written today from DuckDuckGo result snippets: a few
 - `supplier-site-crawl`: finding a supplier's own website, crawling it within fixed limits, and turning its pages into text for the description.
 
 ### Modified Capabilities
+- `invoice-document-processing`: extraction also reads the supplier's website the document prints, stored on the invoice.
 - `supplier-enrichment`: the description is written from the supplier's own website when one is found, falling back to search snippets; the website is stored on the vendor and never overwrites one already set; crawling has its own opt-in flag.
 
 ## Impact

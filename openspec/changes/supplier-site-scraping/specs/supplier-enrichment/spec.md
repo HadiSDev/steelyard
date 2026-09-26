@@ -38,6 +38,25 @@ When site crawling is enabled, enrichment SHALL first try to describe a supplier
 - **WHEN** a client lists suppliers
 - **THEN** each supplier carries its `website`, null when none is known
 
+### Requirement: A website the supplier's invoices state SHALL be crawled before any is searched for
+
+A supplier's known website is the one set on it, else the one its invoices' documents print most often. When a supplier has a known website, enrichment SHALL crawl that site directly, without looking for one among the search results, and SHALL keep it as the supplier's website whether or not the site yields the description. Only when no website is known SHALL enrichment search for the supplier's name to find one.
+
+#### Scenario: The invoices print the website
+
+- **WHEN** a supplier's invoices print `https://danskkaffe.dk/` and crawling is enabled
+- **THEN** that site is crawled, no search is made to find a site, and the supplier's website is `https://danskkaffe.dk/`
+
+#### Scenario: The printed site does not describe the supplier
+
+- **WHEN** the known website cannot be read
+- **THEN** the description is written from the search snippets and the known website is still stored
+
+#### Scenario: No website known
+
+- **WHEN** neither the supplier nor its invoices state a website
+- **THEN** the supplier's name is searched and its site looked for among the results
+
 ## MODIFIED Requirements
 
 ### Requirement: Enrichment SHALL be opt-in, and its absence SHALL degrade nothing

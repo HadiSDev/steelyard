@@ -35,14 +35,17 @@ def _vendor(s: Session, name: str, **kwargs) -> Vendor:
 
 
 def _describing(text: str, website: str | None = None):
-    """A stub lookup that answers `text` from `website` and records who it was asked about."""
+    """A stub lookup that answers `text` from `website` and records who it was asked about, and with which site."""
     asked: list[str] = []
+    stated: list[str | None] = []
 
-    def describe(name: str, country_code: str | None) -> SupplierProfile:
+    def describe(name: str, country_code: str | None, known: str | None = None) -> SupplierProfile:
         asked.append(name)
+        stated.append(known)
         return SupplierProfile(text, website)
 
     describe.asked = asked  # type: ignore[attr-defined]
+    describe.stated = stated  # type: ignore[attr-defined]
     return describe
 
 
@@ -105,7 +108,7 @@ def test_a_description_from_snippets_stores_no_website(session):
 def test_a_website_is_not_stored_when_the_description_is_skipped(session):
     vendor = _vendor(session, "DSB")
 
-    def describe(name: str, country_code: str | None) -> SupplierProfile:
+    def describe(name: str, country_code: str | None, website: str | None = None) -> SupplierProfile:
         other = session.get(Vendor, vendor.id)
         other.description = "Corrected by hand."
         other.description_source = HUMAN
@@ -152,7 +155,7 @@ def test_a_humans_description_is_never_overwritten(session):
 def test_a_description_written_during_the_lookup_survives(session):
     vendor = _vendor(session, "DSB")
 
-    def describe(name: str, country_code: str | None) -> SupplierProfile:
+    def describe(name: str, country_code: str | None, website: str | None = None) -> SupplierProfile:
         other = session.get(Vendor, vendor.id)
         other.description = "Rail operator, corrected by hand."
         other.description_source = HUMAN
@@ -170,7 +173,7 @@ def test_a_description_written_during_the_lookup_survives(session):
 def test_a_failed_lookup_writes_nothing_and_raises_nothing(session):
     _vendor(session, "Obscure Holding ApS")
 
-    def exploding(name: str, country_code: str | None) -> SupplierProfile:
+    def exploding(name: str, country_code: str | None, website: str | None = None) -> SupplierProfile:
         raise ConnectionError("connection refused")
 
     result = describe_vendors(session, enabled=True, describe=exploding)
@@ -300,3 +303,46 @@ def test_a_sync_states_a_vat_number_internationally(
 
     with Session(engine) as s:
         assert s.exec(select(Vendor)).first().vat_number == "DK12644426"
+
+
+def _invoice_printing(session: Session, vendor: Vendor, website: str | None) -> None:
+    org = Organization(name="Org")
+    session.add(org)
+    session.commit()
+    company = Company(organization_id=org.id, name="Acme", base_currency="DKK")
+    session.add(company)
+    session.commit()
+    session.add(Invoice(company_id=company.id, vendor_id=vendor.id, status="uncategorized",
+                        document_supplier_website=website))
+    session.commit()
+
+
+def test_the_website_its_invoices_print_is_handed_to_the_lookup(session):
+    vendor = _vendor(session, "Dansk Kaffe ApS")
+    _invoice_printing(session, vendor, "https://danskkaffe.dk/")
+    _invoice_printing(session, vendor, "https://danskkaffe.dk/")
+    _invoice_printing(session, vendor, "https://kaffe-shop.dk/")
+    describe = _describing("Roasts coffee.")
+
+    describe_vendors(session, enabled=True, describe=describe)
+
+    assert describe.stated == ["https://danskkaffe.dk/"]
+
+
+def test_a_website_set_on_the_supplier_is_preferred_to_a_printed_one(session):
+    vendor = _vendor(session, "Dansk Kaffe ApS", website="https://www.danskkaffe.dk/")
+    _invoice_printing(session, vendor, "https://kaffe-shop.dk/")
+    describe = _describing("Roasts coffee.")
+
+    describe_vendors(session, enabled=True, describe=describe)
+
+    assert describe.stated == ["https://www.danskkaffe.dk/"]
+
+
+def test_a_supplier_with_no_known_website_is_looked_up_by_name(session):
+    _vendor(session, "Dansk Kaffe ApS")
+    describe = _describing("Roasts coffee.")
+
+    describe_vendors(session, enabled=True, describe=describe)
+
+    assert describe.stated == [None]

@@ -37,3 +37,10 @@
 
 - [x] 7.1 Run the ai-api and web-api test suites and tsc on the web app, with no regressions
 - [ ] 7.2 With the user's go-ahead, run enrichment with crawling on for a handful of real suppliers and compare the descriptions with the snippet ones
+
+## 8. Website from the invoice
+
+- [x] 8.1 Add `web_api.website.site_root` with tests
+- [x] 8.2 Read `supplier_website` on the text and vision paths, reduce it to its site, and store it as `Invoice.document_supplier_website` (migration `0015`)
+- [x] 8.3 Crawl a supplier's known website (its own, else the one its invoices print most often) before searching its name for one, keeping the known website whatever the crawl yields
+

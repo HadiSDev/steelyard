@@ -1,4 +1,4 @@
-"""What a supplier sells, from its own website when that can be found and read, from search snippets otherwise."""
+"""What a supplier sells, from its own website when that is known or can be found, from search snippets otherwise."""
 from __future__ import annotations
 
 import json
@@ -22,6 +22,7 @@ class SupplierProfile(NamedTuple):
 def describe_supplier(
     name: str,
     country_code: str | None = None,
+    website: str | None = None,
     *,
     search_fn: Callable[[str], list[dict]] = ddg_search,
     crawl_fn: Callable[[str], str] | None = None,
@@ -29,23 +30,35 @@ def describe_supplier(
     summarize_snippets_fn: Callable[[str, str], str] = summarize_supplier,
     cache_dir: str | None = None,
 ) -> SupplierProfile:
-    """The supplier's description, and its website when the description came from it."""
+    """The supplier's description and website.
+
+    A stated `website` (the supplier's own, or the one its invoices print) is crawled as it is and
+    kept whatever it yields; without one, the site is looked for among the search results for the
+    name and kept only when the description came from it.
+    """
     if not (name or "").strip():
-        return SupplierProfile("", None)
+        return SupplierProfile("", website)
     if summarize_site_fn is None:
         summarize_site_fn = summarize_site
 
-    results = search_supplier(name, country_code, search_fn=search_fn, cache_dir=cache_dir)
+    def search() -> list[dict]:
+        return search_supplier(name, country_code, search_fn=search_fn, cache_dir=cache_dir)
 
+    results: list[dict] | None = None
     if crawl_fn is not None:
-        website = find_website(name, results)
-        if website is not None:
-            description = _describe_from_site(name, country_code, website, crawl_fn, summarize_site_fn)
+        site = website
+        if site is None:
+            results = search()
+            site = find_website(name, results)
+        if site is not None:
+            description = _describe_from_site(name, country_code, site, crawl_fn, summarize_site_fn)
             if description:
-                return SupplierProfile(description, website)
+                return SupplierProfile(description, site)
 
+    if results is None:
+        results = search()
     snippets = " | ".join(result.get("body", "") for result in results if result.get("body"))
-    return SupplierProfile(summarize_snippets_fn(name, snippets), None)
+    return SupplierProfile(summarize_snippets_fn(name, snippets), website)
 
 
 def search_supplier(

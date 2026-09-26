@@ -137,3 +137,54 @@ def test_the_search_is_cached_with_its_links(tmp_path):
 ])
 def test_the_site_answer_is_read_strictly(reply, expected):
     assert site_description(reply) == expected
+
+
+def _describe_stated(calls: _Calls, tmp_path, *, site_answer: str, crawl=None, crawling: bool = True):
+    return describe_supplier(
+        "Dansk Kaffe ApS", "DK", "https://www.danskkaffe.dk/",
+        search_fn=calls.search,
+        crawl_fn=(crawl or calls.crawl) if crawling else None,
+        summarize_site_fn=lambda name, country, text: site_description(site_answer),
+        summarize_snippets_fn=calls.snippet_summary,
+        cache_dir=str(tmp_path),
+    )
+
+
+def test_a_stated_website_is_crawled_without_searching(tmp_path):
+    calls = _Calls()
+
+    profile = _describe_stated(calls, tmp_path, site_answer=_answer(True, "Roasts coffee."))
+
+    assert profile == SupplierProfile("Roasts coffee.", "https://www.danskkaffe.dk/")
+    assert calls.crawled == ["https://www.danskkaffe.dk/"]
+    assert calls.searched == []
+
+
+def test_a_stated_website_is_kept_when_its_site_cannot_describe_the_supplier(tmp_path):
+    calls = _Calls()
+
+    profile = _describe_stated(calls, tmp_path, site_answer=_answer(True, "unused"), crawl=lambda root: "")
+
+    assert profile == SupplierProfile(
+        "A Danish coffee supplier (from snippets).", "https://www.danskkaffe.dk/",
+    )
+    assert len(calls.searched) == 1
+
+
+def test_a_stated_website_is_kept_when_crawling_is_off(tmp_path):
+    calls = _Calls()
+
+    profile = _describe_stated(calls, tmp_path, site_answer=_answer(True, "unused"), crawling=False)
+
+    assert calls.crawled == []
+    assert profile.website == "https://www.danskkaffe.dk/"
+
+
+def test_without_a_stated_website_the_name_is_searched_for_one(tmp_path):
+    calls = _Calls()
+
+    profile = _describe(calls, tmp_path, site_answer=_answer(True, "Roasts coffee."))
+
+    assert len(calls.searched) == 1
+    assert calls.crawled == ["https://danskkaffe.dk/"]
+    assert profile.website == "https://danskkaffe.dk/"
