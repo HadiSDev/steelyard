@@ -71,6 +71,10 @@ class VoucherGroupRead(BaseModel):
     doc_error: str | None = None
     invoice_number: str | None = None
     document_invoice_number: str | None = None
+    totals_agree: bool | None = None
+    document_total: Decimal | None = None
+    invoice_total: Decimal | None = None
+    invoice_currency: str | None = None
 
 
 class VoucherDetailRead(BaseModel):

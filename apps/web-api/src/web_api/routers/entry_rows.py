@@ -1,6 +1,7 @@
 """Named result rows for the ERP entry queries."""
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import NamedTuple
 
 from web_api.db.models import ErpEntry
@@ -27,3 +28,8 @@ class InvoiceHeaderState(NamedTuple):
     doc_error: str | None
     invoice_number: str | None
     document_invoice_number: str | None
+    currency: str | None
+    total: Decimal | None
+    tax: Decimal | None
+    document_total: Decimal | None
+    document_subtotal: Decimal | None

@@ -33,7 +33,7 @@ from ..schemas import (
     VoucherDetailRead,
     VoucherGroupRead,
 )
-from ..reconcile import reconcile_lines
+from ..reconcile import reconcile_lines, totals_agree
 from .entry_rows import EntryRow, InvoiceHeaderState
 from .invoices import _invoice_read
 
@@ -398,11 +398,26 @@ def _invoice_header_state(
             Invoice.doc_error,
             Invoice.invoice_number,
             Invoice.document_invoice_number,
+            Invoice.currency,
+            Invoice.total,
+            Invoice.tax,
+            Invoice.document_total,
+            Invoice.document_subtotal,
         ).where(Invoice.id.in_(invoice_ids))  # type: ignore[union-attr]
     ).all()
     return {
-        invoice_id: InvoiceHeaderState(str(doc_status), doc_error, number, document_number)
-        for invoice_id, doc_status, doc_error, number, document_number in rows
+        row.id: InvoiceHeaderState(
+            doc_status=str(row.doc_status),
+            doc_error=row.doc_error,
+            invoice_number=row.invoice_number,
+            document_invoice_number=row.document_invoice_number,
+            currency=row.currency,
+            total=row.total,
+            tax=row.tax,
+            document_total=row.document_total,
+            document_subtotal=row.document_subtotal,
+        )
+        for row in rows
     }
 
 
@@ -444,6 +459,10 @@ def _voucher_group(
         doc_error=header.doc_error if header is not None else None,
         invoice_number=header.invoice_number if header is not None else None,
         document_invoice_number=header.document_invoice_number if header is not None else None,
+        totals_agree=totals_agree(header) if header is not None else None,
+        document_total=header.document_total if header is not None else None,
+        invoice_total=header.total if header is not None else None,
+        invoice_currency=header.currency if header is not None else None,
     )
 
 
