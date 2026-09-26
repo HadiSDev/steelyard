@@ -23,6 +23,7 @@ class VendorOverviewRead(BaseModel):
     country_code: str | None = None
     vat_number: str | None = None
     description: str | None = None
+    website: str | None = None
     invoice_count: int
     last_invoice_date: date | None = None
     spend: list[VendorSpendRead] = []

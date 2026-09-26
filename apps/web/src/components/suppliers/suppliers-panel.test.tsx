@@ -33,6 +33,7 @@ function supplier(
     country_code: 'IE',
     vat_number: 'IE6388047V',
     description: 'Cloud computing and hosting services',
+    website: 'https://cloud.google.com/',
     invoice_count: 12,
     last_invoice_date: '2026-09-18',
     spend: [{ currency: 'DKK', amount: '2400.00', unconverted_count: 0 }],

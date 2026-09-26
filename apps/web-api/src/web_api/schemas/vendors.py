@@ -12,3 +12,4 @@ class VendorRead(BaseModel):
     country_code: str | None = None
     vat_number: str | None = None
     description: str | None = None
+    website: str | None = None

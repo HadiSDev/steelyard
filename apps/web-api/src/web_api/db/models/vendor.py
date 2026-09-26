@@ -18,4 +18,5 @@ class Vendor(SQLModel, table=True):
     vat_number: Optional[str] = Field(sa_type=String, nullable=True)
     description: Optional[str] = Field(sa_type=String, nullable=True)
     description_source: Optional[str] = Field(sa_type=String, nullable=True)
+    website: Optional[str] = Field(sa_type=String, nullable=True)
     created_at: datetime = Field(sa_column=_ts())

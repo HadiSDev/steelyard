@@ -87,6 +87,7 @@ def vendor_overview(
             country_code=vendor.country_code,
             vat_number=vendor.vat_number,
             description=vendor.description,
+            website=vendor.website,
             invoice_count=invoice_count,
             last_invoice_date=last_invoice_date,
             spend=spend.get(vendor.id, []),

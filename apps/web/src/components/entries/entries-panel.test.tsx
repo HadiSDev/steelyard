@@ -91,6 +91,7 @@ const CONTOSO: VendorRead = {
   country_code: 'DK',
   vat_number: 'DK99999999',
   description: null,
+  website: null,
 }
 
 /** A DKK posting, converted at rate 1 unless overridden. */

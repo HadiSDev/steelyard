@@ -13,7 +13,8 @@ from web_api_testkit import auth
 def seed_vendors(engine, seed):
     """Vendor X (Org A's inv_a), Vendor Y (Org B's inv_b), Vendor Z (unreferenced)."""
     with Session(engine) as s:
-        vx = Vendor(name="Acme Supplies", country_code="DK", vat_number="DK111")
+        vx = Vendor(name="Acme Supplies", country_code="DK", vat_number="DK111",
+                    website="https://acmesupplies.dk/")
         vy = Vendor(name="Beta Legal", country_code="DK", vat_number="DK222")
         vz = Vendor(name="Zeta Unused", country_code="DK", vat_number="DK999")
         s.add(vx)
@@ -55,3 +56,13 @@ def test_foreign_company_id_is_404(client, seed, seed_vendors):
 def test_empty_scope_returns_empty(client, seed_vendors):
     body = client.get("/api/v1/vendors", headers=auth("tok_empty")).json()
     assert body == {"items": [], "page": 1, "page_size": 50, "total": 0}
+
+
+def test_each_vendor_carries_its_website(client, seed_vendors):
+    body = client.get("/api/v1/vendors", headers=auth("tokA")).json()
+    assert body["items"][0]["website"] == "https://acmesupplies.dk/"
+
+
+def test_an_unknown_website_is_null(client, seed_vendors):
+    body = client.get("/api/v1/vendors", headers=auth("tokB")).json()
+    assert body["items"][0]["website"] is None

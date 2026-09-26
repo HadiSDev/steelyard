@@ -374,6 +374,7 @@ export interface VendorRead {
   country_code: string | null
   vat_number: string | null
   description: string | null
+  website: string | null
 }
 
 /** A supplier's net-of-VAT spend in one base currency. */

@@ -30,7 +30,7 @@ def suppliers(engine, seed):
     """Org A buys from Acme (two companies), Beta (shared with Org B) and Cloud (unconverted)."""
     with Session(engine) as s:
         acme = Vendor(name="Acme Supplies", country_code="DK", vat_number="DK111",
-                      description="Office furniture")
+                      description="Office furniture", website="https://acmesupplies.dk/")
         beta = Vendor(name="Beta Legal", country_code="DK", vat_number="DK222")
         cloud = Vendor(name="Cloud Co", country_code="DE", vat_number="DE333")
         unused = Vendor(name="Zeta Unused", vat_number="DK999")
@@ -75,6 +75,13 @@ def test_only_the_organizations_suppliers_are_listed(client, suppliers):
     ids = {row["id"] for row in _rows(client)}
 
     assert ids == {suppliers["acme"], suppliers["beta"], suppliers["cloud"]}
+
+
+def test_each_supplier_carries_its_website(client, suppliers):
+    rows = _by_id(_rows(client))
+
+    assert rows[suppliers["acme"]]["website"] == "https://acmesupplies.dk/"
+    assert rows[suppliers["beta"]]["website"] is None
 
 
 def test_a_shared_supplier_carries_only_the_callers_figures(client, suppliers):
