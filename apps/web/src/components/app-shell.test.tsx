@@ -62,13 +62,13 @@ describe('AppSidebar', () => {
     ).toBeNull()
   })
 
-  it('keeps pages that do not exist yet disabled and unlinked', () => {
-    render(<AppSidebar pathname="/" />)
+  it('links Suppliers to its page, and offers no Vendors entry', () => {
+    render(<AppSidebar pathname="/suppliers" />)
 
-    expect(screen.queryByRole('link', { name: 'Vendors' })).toBeNull()
-    expect(
-      screen.getByRole('button', { name: 'Vendors' }).hasAttribute('disabled'),
-    ).toBe(true)
+    const suppliers = screen.getByRole('link', { name: 'Suppliers' })
+    expect(suppliers.getAttribute('href')).toBe('/suppliers')
+    expect(suppliers.getAttribute('aria-current')).toBe('page')
+    expect(screen.queryByText('Vendors')).toBeNull()
   })
 
   it('links Spend Lines to its page, and no longer promises an Invoices one', () => {

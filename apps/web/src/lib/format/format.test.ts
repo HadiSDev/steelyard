@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatRelativeTime, fromIsoDate, toIsoDate } from './format'
+import { formatDay, formatRelativeTime, fromIsoDate, toIsoDate } from './format'
 
 describe('toIsoDate / fromIsoDate', () => {
   it('writes a date as the YYYY-MM-DD string the API takes', () => {
@@ -58,5 +58,15 @@ describe('formatRelativeTime', () => {
 
   it('returns an unparseable value unchanged', () => {
     expect(formatRelativeTime('not a date', now)).toBe('not a date')
+  })
+})
+
+describe('formatDay', () => {
+  it('states a calendar date in words', () => {
+    expect(formatDay('2026-09-10')).toBe('10 Sept 2026')
+  })
+
+  it('marks a missing date', () => {
+    expect(formatDay(null)).toBe('—')
   })
 })

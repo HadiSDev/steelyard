@@ -9,6 +9,7 @@ import { useClerk, useUser } from '@clerk/tanstack-react-start'
 
 import { Logo } from '#/components/brand/logo'
 import {
+  Building2,
   ChevronDown,
   LayoutDashboard,
   LogOut,
@@ -16,7 +17,6 @@ import {
   Receipt,
   Settings,
   Sun,
-  Users,
 } from 'lucide-react'
 import {
   AppShell,
@@ -132,7 +132,7 @@ function UserMenu() {
 export const NAV_ITEMS = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/' },
   { label: 'Spend Lines', icon: Receipt, to: '/invoice-lines' },
-  { label: 'Vendors', icon: Users },
+  { label: 'Suppliers', icon: Building2, to: '/suppliers' },
   { label: 'Settings', icon: Settings, to: '/settings' },
 ] as const
 

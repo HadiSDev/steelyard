@@ -376,6 +376,35 @@ export interface VendorRead {
   description: string | null
 }
 
+/** A supplier's net-of-VAT spend in one base currency. */
+export interface VendorSpendRead {
+  currency: string | null
+  amount: Money
+  /** Invoices left out of the amount for lacking a base amount. */
+  unconverted_count: number
+}
+
+/** Row of `GET /vendors/overview`: a supplier with its figures from the org's invoices. */
+export interface VendorOverviewRead extends VendorRead {
+  invoice_count: number
+  last_invoice_date: string | null
+  spend: Array<VendorSpendRead>
+}
+
+export type SupplierSort =
+  'name' | 'spend' | 'invoice_count' | 'last_invoice_date'
+
+export type SortOrder = 'asc' | 'desc'
+
+/** The Suppliers page's URL state. */
+export interface SupplierFilters {
+  q?: string
+  company_id?: string
+  sort?: SupplierSort
+  order?: SortOrder
+  page?: number
+}
+
 /** One raw GL posting. */
 export interface ErpEntryRead {
   id: string

@@ -8,25 +8,25 @@
 
 ## 2. Data layer (web)
 
-- [ ] 2.1 Add `VendorOverviewRead`, `VendorSpendRead` and `SupplierFilters` types
-- [ ] 2.2 Add `lib/supplier-search.ts` validating `q`, `company_id`, `sort`, `order` and `page`, dropping unknown values, with tests
-- [ ] 2.3 Add `supplierOverviewQueryOptions` in `lib/api/` keyed by the filters, keeping previous data while they change, with a test of its key and request
+- [x] 2.1 Add `VendorOverviewRead`, `VendorSpendRead` and `SupplierFilters` types
+- [x] 2.2 Add `lib/supplier-search.ts` validating `q`, `company_id`, `sort`, `order` and `page`, dropping unknown values, with tests
+- [x] 2.3 Add `supplierOverviewQueryOptions` in `lib/api/` keyed by the filters, keeping previous data while they change, with a test of its key and request
 
 ## 3. Suppliers page (web)
 
-- [ ] 3.1 Build `components/suppliers/supplier-spend.tsx`: amounts per currency and the unconverted note
-- [ ] 3.2 Build `components/suppliers/supplier-table.tsx`: fixed columns (Supplier, VAT number, What they sell, Invoices, Spend, Last invoice), sortable headers with `aria-sort`, explicit marks for missing values, keyboard-activatable rows
-- [ ] 3.3 Build `components/suppliers/suppliers-toolbar.tsx`: debounced search and company filter
-- [ ] 3.4 Build `components/suppliers/suppliers-panel.tsx`: toolbar, table, pagination, and the loading, empty ("appear once invoices are synced"), no-match (with clear) and error states
-- [ ] 3.5 Add `routes/_authed/suppliers.tsx`: URL state, default sort by spend when the listed companies share a base currency and by name otherwise, and row activation navigating to `/invoice-lines?vendor_id=`
-- [ ] 3.6 Component tests covering each scenario in `frontend-suppliers`
+- [x] 3.1 Build `components/suppliers/supplier-spend.tsx`: amounts per currency and the unconverted note
+- [x] 3.2 Build `components/suppliers/supplier-table.tsx`: fixed columns (Supplier, VAT number, What they sell, Invoices, Spend, Last invoice), sortable headers with `aria-sort`, explicit marks for missing values, keyboard-activatable rows
+- [x] 3.3 Build `components/suppliers/suppliers-toolbar.tsx`: debounced search and company filter
+- [x] 3.4 Build `components/suppliers/suppliers-panel.tsx`: toolbar, table, pagination, and the loading, empty ("appear once invoices are synced"), no-match (with clear) and error states
+- [x] 3.5 Add `routes/_authed/suppliers.tsx`: URL state, default sort by spend when the listed companies share a base currency and by name otherwise, and row activation navigating to `/invoice-lines?vendor_id=`
+- [x] 3.6 Component tests covering each scenario in `frontend-suppliers`
 
 ## 4. Navigation (web)
 
-- [ ] 4.1 Rename the sidebar entry to **Suppliers** with a link to `/suppliers`; update the shell tests so the entry navigates, is active on the route, and no Vendors entry exists
-- [ ] 4.2 Regenerate the route tree
+- [x] 4.1 Rename the sidebar entry to **Suppliers** with a link to `/suppliers`; update the shell tests so the entry navigates, is active on the route, and no Vendors entry exists
+- [x] 4.2 Regenerate the route tree
 
 ## 5. Verify
 
-- [ ] 5.1 Run web-api pytest, and vitest, tsc, eslint and prettier on the web app, with no regressions
+- [x] 5.1 Run web-api pytest, and vitest, tsc, eslint and prettier on the web app, with no regressions
 - [ ] 5.2 Check the page in the browser at desktop and phone widths: no horizontal scroll, and no layout shift when sorting, paging or searching

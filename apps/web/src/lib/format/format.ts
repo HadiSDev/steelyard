@@ -24,6 +24,17 @@ export function formatMoney(value: Money, currency: string | null): string {
 }
 
 /** Compact integer formatting for counts. */
+const dayFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' })
+
+/** A calendar date as "10 Sept 2026"; an em dash when absent, the raw value when unparseable. */
+export function formatDay(value: string | null): string {
+  if (!value) {
+    return '—'
+  }
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? value : dayFormatter.format(parsed)
+}
+
 export function formatCount(value: number): string {
   return new Intl.NumberFormat('en-GB').format(value)
 }

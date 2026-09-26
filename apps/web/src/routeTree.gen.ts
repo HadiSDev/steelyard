@@ -14,6 +14,7 @@ import { Route as SsoCallbackRouteImport } from './routes/sso-callback'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
+import { Route as AuthedSuppliersRouteImport } from './routes/_authed/suppliers'
 import { Route as AuthedSettingsRouteImport } from './routes/_authed/settings'
 import { Route as AuthedInvoiceLinesRouteImport } from './routes/_authed/invoice-lines'
 import { Route as AuthedSettingsIndexRouteImport } from './routes/_authed/settings/index'
@@ -46,6 +47,11 @@ const AuthedRoute = AuthedRouteImport.update({
 const AuthedIndexRoute = AuthedIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedSuppliersRoute = AuthedSuppliersRouteImport.update({
+  id: '/suppliers',
+  path: '/suppliers',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedSettingsRoute = AuthedSettingsRouteImport.update({
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/ui': typeof UiRoute
   '/invoice-lines': typeof AuthedInvoiceLinesRoute
   '/settings': typeof AuthedSettingsRouteWithChildren
+  '/suppliers': typeof AuthedSuppliersRoute
   '/settings/companies': typeof AuthedSettingsCompaniesRouteWithChildren
   '/settings/organization': typeof AuthedSettingsOrganizationRoute
   '/settings/profile': typeof AuthedSettingsProfileRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/sso-callback': typeof SsoCallbackRoute
   '/ui': typeof UiRoute
   '/invoice-lines': typeof AuthedInvoiceLinesRoute
+  '/suppliers': typeof AuthedSuppliersRoute
   '/': typeof AuthedIndexRoute
   '/settings/organization': typeof AuthedSettingsOrganizationRoute
   '/settings/profile': typeof AuthedSettingsProfileRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/ui': typeof UiRoute
   '/_authed/invoice-lines': typeof AuthedInvoiceLinesRoute
   '/_authed/settings': typeof AuthedSettingsRouteWithChildren
+  '/_authed/suppliers': typeof AuthedSuppliersRoute
   '/_authed/': typeof AuthedIndexRoute
   '/_authed/settings/companies': typeof AuthedSettingsCompaniesRouteWithChildren
   '/_authed/settings/organization': typeof AuthedSettingsOrganizationRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/ui'
     | '/invoice-lines'
     | '/settings'
+    | '/suppliers'
     | '/settings/companies'
     | '/settings/organization'
     | '/settings/profile'
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/sso-callback'
     | '/ui'
     | '/invoice-lines'
+    | '/suppliers'
     | '/'
     | '/settings/organization'
     | '/settings/profile'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/ui'
     | '/_authed/invoice-lines'
     | '/_authed/settings'
+    | '/_authed/suppliers'
     | '/_authed/'
     | '/_authed/settings/companies'
     | '/_authed/settings/organization'
@@ -232,6 +244,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthedIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/suppliers': {
+      id: '/_authed/suppliers'
+      path: '/suppliers'
+      fullPath: '/suppliers'
+      preLoaderRoute: typeof AuthedSuppliersRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/settings': {
@@ -340,12 +359,14 @@ const AuthedSettingsRouteWithChildren = AuthedSettingsRoute._addFileChildren(
 interface AuthedRouteChildren {
   AuthedInvoiceLinesRoute: typeof AuthedInvoiceLinesRoute
   AuthedSettingsRoute: typeof AuthedSettingsRouteWithChildren
+  AuthedSuppliersRoute: typeof AuthedSuppliersRoute
   AuthedIndexRoute: typeof AuthedIndexRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedInvoiceLinesRoute: AuthedInvoiceLinesRoute,
   AuthedSettingsRoute: AuthedSettingsRouteWithChildren,
+  AuthedSuppliersRoute: AuthedSuppliersRoute,
   AuthedIndexRoute: AuthedIndexRoute,
 }
 

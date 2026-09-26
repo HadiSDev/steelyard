@@ -15,7 +15,7 @@ import {
   cn,
 } from '#/components/ui'
 import type { VoucherSelection } from '#/lib/api/entries'
-import { formatMoney, toNumber } from '#/lib/format/format'
+import { formatDay, formatMoney, toNumber } from '#/lib/format/format'
 import type { InvoiceLineRead, VoucherGroupRead } from '#/lib/api/types'
 import { ConvertedAmount } from './converted-amount'
 import { LineStatusBadge } from './lines/line-status'
@@ -24,16 +24,6 @@ import { SpendCategory } from './lines/spend-category'
 import { TotalsMismatchMarker, TotalsMismatchRow } from './totals-mismatch'
 import { lineName } from '#/lib/format/line'
 import { voucherLabel } from '#/lib/format/voucher'
-
-const dateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' })
-
-function formatDate(value: string | null): string {
-  if (!value) {
-    return '—'
-  }
-  const parsed = new Date(value)
-  return Number.isNaN(parsed.getTime()) ? value : dateFormatter.format(parsed)
-}
 
 /** A quantity without trailing zeros. */
 function formatQuantity(value: string | number): string {
@@ -328,7 +318,7 @@ export function VoucherTable({ groups, onSelectEntry }: VoucherTableProps) {
                   )}
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
-                  {formatDate(group.accounting_date)}
+                  {formatDay(group.accounting_date)}
                 </TableCell>
                 <TableCell className="text-right">
                   <span className="inline-flex items-center gap-1.5">
