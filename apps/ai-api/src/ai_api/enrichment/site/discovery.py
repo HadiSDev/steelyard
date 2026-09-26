@@ -4,13 +4,7 @@ from __future__ import annotations
 import re
 from urllib.parse import urlsplit
 
-MIN_KEY_LENGTH = 3
-
-LEGAL_FORMS = frozenset({
-    "ab", "ag", "amba", "aps", "as", "bv", "co", "corp", "gmbh", "inc", "is",
-    "ivs", "ks", "limited", "llc", "ltd", "nv", "oy", "plc", "ps", "sa",
-    "sarl", "sas", "smba", "spa", "srl",
-})
+from web_api.website import host_names_supplier
 
 BLOCKED_HOSTS = frozenset({
     "amazon.com", "bing.com", "bloomberg.com", "cvr.dk", "cvrapi.dk",
@@ -33,31 +27,14 @@ SKIPPED_PAGE_WORDS = (
     "presse", "press", "blog",
 )
 
-_DANISH_LETTERS = str.maketrans({"æ": "ae", "ø": "oe", "å": "aa", "ä": "ae", "ö": "oe", "ü": "ue"})
-
-
-def name_keys(name: str) -> list[str]:
-    """The supplier's name words joined cumulatively: "Dansk Kaffe ApS" gives dansk, danskkaffe."""
-    words = []
-    for token in name.lower().translate(_DANISH_LETTERS).split():
-        word = re.sub(r"[^a-z0-9]", "", token)
-        if word and word not in LEGAL_FORMS:
-            words.append(word)
-    keys = ["".join(words[:count]) for count in range(1, len(words) + 1)]
-    return [key for key in keys if len(key) >= MIN_KEY_LENGTH]
-
-
 def find_website(name: str, results: list[dict]) -> str | None:
     """The root of the first result whose domain names the supplier, skipping directories and social networks."""
-    keys = name_keys(name)
-    if not keys:
-        return None
     for result in results:
         parts = urlsplit(result.get("href") or "")
         host = (parts.hostname or "").lower()
         if not host or _is_blocked(host):
             continue
-        if _host_names(host, keys):
+        if host_names_supplier(host, name):
             return f"{parts.scheme or 'https'}://{host}/"
     return None
 
@@ -87,15 +64,6 @@ def pages_to_crawl(root: str, links: list[str], limit: int) -> list[str]:
 
 def _is_blocked(host: str) -> bool:
     return any(host == domain or host.endswith(f".{domain}") for domain in BLOCKED_HOSTS)
-
-
-def _host_names(host: str, keys: list[str]) -> bool:
-    full = keys[-1]
-    for label in host.split(".")[:-1]:
-        joined = label.replace("-", "")
-        if joined in keys or full in joined:
-            return True
-    return False
 
 
 def _bare_host(host: str) -> str:

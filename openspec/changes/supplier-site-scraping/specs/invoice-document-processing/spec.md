@@ -2,7 +2,7 @@
 
 ### Requirement: Extraction SHALL read the supplier's website the document prints
 
-Both extraction paths, from a document's text and from its page images, SHALL read the supplier's own website when the document prints one, such as in its header, footer or beside the supplier's address. The buyer's website, a payment portal and an email address SHALL NOT be read as the supplier's website. On a document of several pages, the first page that prints a website states it.
+Both extraction paths, from a document's text and from its page images, SHALL read the supplier's own website when the document prints one, such as in its header, footer or beside the supplier's address. The buyer's website, a payment portal, an email address, and an address printed in a legal or regulatory note (a deposit guarantee scheme, a financial regulator, a complaints body, a parent group) SHALL NOT be read as the supplier's website. On a document of several pages, the first page that prints a website states it.
 
 The website read SHALL be reduced to the root of its site (`scheme://host/`, `https` when the document prints no scheme) and stored on the invoice as `document_supplier_website`, beside the invoice's other document readings. A value that names no site, such as an email address or a bare name, SHALL be stored as none.
 

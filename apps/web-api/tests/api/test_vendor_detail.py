@@ -206,3 +206,12 @@ def test_a_website_set_on_the_supplier_wins_over_a_printed_one(client, engine, s
         s.commit()
 
     assert _detail(client, supplier["acme"])["website"] == "https://acmesupplies.dk/"
+
+
+def test_a_printed_website_that_does_not_name_the_supplier_is_not_shown(client, engine, supplier):
+    with Session(engine) as s:
+        s.get(Vendor, supplier["acme"]).website = None
+        s.get(Invoice, supplier["inv_a"]).document_supplier_website = "https://www.iidraudimas.lt/"
+        s.commit()
+
+    assert _detail(client, supplier["acme"])["website"] is None

@@ -346,3 +346,14 @@ def test_a_supplier_with_no_known_website_is_looked_up_by_name(session):
     describe_vendors(session, enabled=True, describe=describe)
 
     assert describe.stated == [None]
+
+
+def test_a_printed_website_that_is_not_the_suppliers_is_not_handed_on(session):
+    vendor = _vendor(session, "Revolut Bank UAB")
+    _invoice_printing(session, vendor, "https://www.iidraudimas.lt/")
+    describe = _describing("A digital bank.")
+
+    describe_vendors(session, enabled=True, describe=describe)
+
+    assert describe.stated == [None]
+    assert session.exec(select(Vendor)).first().website is None

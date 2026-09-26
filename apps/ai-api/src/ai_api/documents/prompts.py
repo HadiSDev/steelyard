@@ -4,7 +4,9 @@ SUPPLIER_WEBSITE = (
     "If the document prints the supplier's own website — usually in the header, "
     "the footer or beside its address — report it as printed. Do not report the "
     "buyer's website, a payment portal, or an email address as the supplier's "
-    "website, and leave it null when none is printed."
+    "website. An address printed in a legal or regulatory note — a deposit "
+    "guarantee scheme, a financial regulator, a complaints body, a parent group "
+    "— is not the supplier's website either. Leave it null when none is printed."
 )
 
 TOTALS_BLOCK_CHARGES = (

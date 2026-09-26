@@ -40,7 +40,7 @@ When site crawling is enabled, enrichment SHALL first try to describe a supplier
 
 ### Requirement: A website the supplier's invoices state SHALL be crawled before any is searched for
 
-A supplier's known website is the one set on it, else the one its invoices' documents print most often. When a supplier has a known website, enrichment SHALL crawl that site directly, without looking for one among the search results, and SHALL keep it as the supplier's website whether or not the site yields the description. Only when no website is known SHALL enrichment search for the supplier's name to find one.
+A supplier's known website is the one set on it, else the one its invoices' documents print most often among those whose domain names the supplier (by the same name match that picks a site from search results). A printed website whose domain does not name the supplier, such as a deposit guarantee scheme in a bank's footer, SHALL NOT be a known website. When a supplier has a known website, enrichment SHALL crawl that site directly, without looking for one among the search results, and SHALL keep it as the supplier's website whether or not the site yields the description. Only when no website is known SHALL enrichment search for the supplier's name to find one.
 
 #### Scenario: The invoices print the website
 
@@ -51,6 +51,11 @@ A supplier's known website is the one set on it, else the one its invoices' docu
 
 - **WHEN** the known website cannot be read
 - **THEN** the description is written from the search snippets and the known website is still stored
+
+#### Scenario: A printed address that is not the supplier's
+
+- **WHEN** a bank's invoices print only `https://www.iidraudimas.lt/`, its deposit guarantee scheme
+- **THEN** the bank has no known website, and its name is searched for one
 
 #### Scenario: No website known
 

@@ -1,7 +1,8 @@
 """Finding a supplier's own website among search results, and which of its pages to read."""
 from __future__ import annotations
 
-from ai_api.enrichment.site.discovery import find_website, name_keys, pages_to_crawl
+from ai_api.enrichment.site.discovery import find_website, pages_to_crawl
+from web_api.website import name_keys
 
 
 def _results(*hrefs: str) -> list[dict]:
