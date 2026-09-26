@@ -23,6 +23,7 @@ from .errors import EmptyDocumentError, UnsupportedMediaError, VisionUnreadableE
 from .extractor import extract_lines
 from .reconcile import reconcile
 from .replace import replace_invoice_lines
+from .requeue import requeue_documents
 
 logger = logging.getLogger("ai_api.documents")
 
@@ -209,12 +210,21 @@ def run_documents(
     company_id: str | None = None,
     invoice_id: str | None = None,
     limit: int | None = None,
+    reprocess: bool = False,
     extract=extract_lines,
 ) -> dict[str, int]:
-    """Process every pending invoice. Returns counts by outcome and categorization."""
+    """Process every pending invoice, first putting the selected read ones back when reprocessing.
+
+    Returns counts by outcome and categorization.
+    """
     counts = empty_report()
 
     with Session(engine) as session:
+        if reprocess:
+            requeued = requeue_documents(
+                session, company_id=company_id, invoice_id=invoice_id, limit=limit
+            )
+            logger.info("Put %d document(s) back in the queue to be read again.", requeued)
         work = pending_invoices(
             session, company_id=company_id, invoice_id=invoice_id, limit=limit
         )
@@ -252,11 +262,17 @@ def main(argv: list[str] | None = None) -> int:
         "--limit", type=int, default=None,
         help="Process at most this many invoices, to pace a large backlog",
     )
+    parser.add_argument(
+        "--reprocess", action="store_true",
+        help="Read the selected documents again, including ones already read or failed. "
+             "Their lines are replaced and categorized again; verified lines are kept.",
+    )
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     counts = run_documents(
-        company_id=args.company_id, invoice_id=args.invoice_id, limit=args.limit
+        company_id=args.company_id, invoice_id=args.invoice_id, limit=args.limit,
+        reprocess=args.reprocess,
     )
 
     if not any(counts.values()):
