@@ -44,3 +44,6 @@
 - [x] 7.2 State VAT numbers internationally on sync and on invoice header corrections, keeping the catalog key on the ERP's own spelling
 - [x] 7.3 Add migration `0014_international_vat_numbers` restating stored supplier and invoice VAT numbers
 
+## 8. What the invoices print
+
+- [x] 8.1 Give the invoices' supplier country and VAT number on the detail, and show them beside the ERP's with a note where they differ or stand alone

@@ -96,3 +96,11 @@ A supplier's VAT number SHALL be stored and returned in its international form: 
 - **WHEN** the ERP states `IE6388047V` for an Irish supplier
 - **THEN** it is stored as `IE6388047V`
 
+### Requirement: A supplier's detail SHALL give what its invoices print beside the ERP's facts
+
+The detail SHALL carry `document_country_code` and `document_vat_number`: the supplier country and VAT number its invoices to the caller most often print, or none. They SHALL be given beside, never in place of, the ERP's `country_code` and `vat_number`.
+
+#### Scenario: The ERP and the invoices disagree
+
+- **WHEN** the ERP holds `DK` for a supplier whose invoices print `LT`
+- **THEN** the detail's `country_code` is `DK` and its `document_country_code` is `LT`

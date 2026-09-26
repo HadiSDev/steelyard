@@ -75,3 +75,21 @@ def test_an_email_address_is_not_a_website():
     result = extract_lines(_pdf(["INVOICE"]), kickoff=kickoff)
 
     assert result.supplier_website is None
+
+
+def test_the_text_path_keeps_the_suppliers_country_and_international_vat_number():
+    def kickoff(prompt: str) -> ExtractedInvoice:
+        return ExtractedInvoice(vendor_name="Revolut Bank UAB", supplier_country_code="lt",
+                                supplier_vat_number="100 011 747 16")
+
+    result = extract_lines(_pdf(["INVOICE"]), kickoff=kickoff)
+
+    assert result.supplier_country_code == "LT"
+    assert result.supplier_vat_number == "LT10001174716"
+
+
+def test_a_country_that_is_not_a_code_is_not_kept():
+    def kickoff(prompt: str) -> ExtractedInvoice:
+        return ExtractedInvoice(vendor_name="Revolut Bank UAB", supplier_country_code="Lithuania")
+
+    assert extract_lines(_pdf(["INVOICE"]), kickoff=kickoff).supplier_country_code is None

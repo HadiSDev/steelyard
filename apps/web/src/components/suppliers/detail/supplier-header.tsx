@@ -1,7 +1,9 @@
 import { ArrowLeft, ExternalLink, Receipt } from 'lucide-react'
 import { Button, IconButton } from '#/components/ui'
+import { findCountry } from '#/lib/format/countries'
 import type { VendorDetailRead } from '#/lib/api/types'
 import { SupplierCountry } from '../supplier-country'
+import { PrintedNote } from './printed-note'
 
 const DESCRIPTION_SOURCES: Record<string, string> = {
   web: 'Researched from the web',
@@ -18,6 +20,10 @@ export function websiteLabel(website: string): string {
   }
 }
 
+function countryName(code: string): string {
+  return findCountry(code)?.name ?? code
+}
+
 function Fact({
   label,
   children,
@@ -30,7 +36,7 @@ function Fact({
       <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
         {label}
       </dt>
-      <dd className="min-w-0 text-sm">{children}</dd>
+      <dd className="flex min-w-0 flex-col gap-1 text-sm">{children}</dd>
     </div>
   )
 }
@@ -47,6 +53,8 @@ export function SupplierHeader({
   onBack,
   onViewLines,
 }: SupplierHeaderProps) {
+  const country = supplier.country_code ?? supplier.document_country_code
+  const vatNumber = supplier.vat_number ?? supplier.document_vat_number
   const source = supplier.description_source
     ? DESCRIPTION_SOURCES[supplier.description_source]
     : undefined
@@ -70,16 +78,25 @@ export function SupplierHeader({
 
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Fact label="Country">
-          <SupplierCountry code={supplier.country_code} />
+          <SupplierCountry code={country} />
+          <PrintedNote
+            erp={supplier.country_code}
+            printed={supplier.document_country_code}
+            describe={countryName}
+          />
         </Fact>
         <Fact label="VAT number">
-          {supplier.vat_number ? (
+          {vatNumber ? (
             <span className="font-mono tabular-nums break-all">
-              {supplier.vat_number}
+              {vatNumber}
             </span>
           ) : (
             <span className="text-muted-foreground">—</span>
           )}
+          <PrintedNote
+            erp={supplier.vat_number}
+            printed={supplier.document_vat_number}
+          />
         </Fact>
         <Fact label="Website">
           {supplier.website ? (

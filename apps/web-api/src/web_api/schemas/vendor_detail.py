@@ -37,7 +37,11 @@ class VendorInvoiceRead(BaseModel):
 
 
 class VendorDetailRead(BaseModel):
-    """A supplier the organization buys from, with its figures, its categories and its latest invoices."""
+    """A supplier the organization buys from, with its figures, its categories and its latest invoices.
+
+    `document_country_code` and `document_vat_number` are what the supplier's invoices most often
+    print, beside the ERP's `country_code` and `vat_number`.
+    """
 
     id: str
     name: str
@@ -46,6 +50,8 @@ class VendorDetailRead(BaseModel):
     description: str | None = None
     description_source: str | None = None
     website: str | None = None
+    document_country_code: str | None = None
+    document_vat_number: str | None = None
     invoice_count: int
     first_invoice_date: date | None = None
     last_invoice_date: date | None = None

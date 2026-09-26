@@ -38,6 +38,8 @@ function detail(overrides: Partial<VendorDetailRead> = {}): VendorDetailRead {
     description: 'Runs the Danish deposit and return system.',
     description_source: 'web',
     website: 'https://www.danskretursystem.dk/',
+    document_country_code: null,
+    document_vat_number: null,
     invoice_count: 14,
     first_invoice_date: '2025-01-03',
     last_invoice_date: '2026-09-18',
@@ -131,6 +133,35 @@ describe('SupplierDetailPanel — who the supplier is', () => {
       'danskretursystem.dk',
     )
     expect(websiteLabel('not a url')).toBe('not a url')
+  })
+})
+
+describe('SupplierDetailPanel — what its invoices print', () => {
+  it('warns where the invoices disagree with the ERP', () => {
+    setup({
+      supplier: detail({
+        country_code: 'DK',
+        document_country_code: 'LT',
+        vat_number: null,
+        document_vat_number: 'LT10001174716',
+      }),
+    })
+
+    expect(screen.getByText(/Its invoices say Lithuania/)).toBeTruthy()
+    expect(screen.getByText('LT10001174716')).toBeTruthy()
+    expect(screen.getByText('From its invoices')).toBeTruthy()
+  })
+
+  it('says nothing where they agree', () => {
+    setup({
+      supplier: detail({
+        document_country_code: 'dk',
+        document_vat_number: 'DK 12345678',
+      }),
+    })
+
+    expect(screen.queryByText(/Its invoices say/)).toBeNull()
+    expect(screen.queryByText('From its invoices')).toBeNull()
   })
 })
 

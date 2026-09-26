@@ -43,4 +43,8 @@
 - [x] 8.1 Add `web_api.website.site_root` with tests
 - [x] 8.2 Read `supplier_website` on the text and vision paths, reduce it to its site, and store it as `Invoice.document_supplier_website` (migration `0015`)
 - [x] 8.3 Crawl a supplier's known website (its own, else the one its invoices print most often) before searching its name for one, keeping the known website whatever the crawl yields
+- [x] 8.5 Describe in English, and do not take a product's site as the supplier's
+- [x] 8.6 Accept a printed website by any word of the supplier's name
+- [x] 8.7 Add `--websites` to find websites for described suppliers
+- [x] 8.8 Keep the printed supplier country and VAT number on the invoice (migration `0016`)
 - [x] 8.4 Add `--reprocess` to the documents CLI to read documents again in bulk, with its requeue in `documents/requeue.py`

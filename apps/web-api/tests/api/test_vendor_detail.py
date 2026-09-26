@@ -5,7 +5,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from web_api.db.models import (
     Company, ErpAccount, ErpEntry, ErpIntegration, Invoice, InvoiceLine, SpendCategory, SpendTree,
@@ -215,3 +215,25 @@ def test_a_printed_website_that_does_not_name_the_supplier_is_not_shown(client, 
         s.commit()
 
     assert _detail(client, supplier["acme"])["website"] is None
+
+
+def test_what_the_invoices_print_is_given_beside_the_erps_facts(client, engine, supplier):
+    with Session(engine) as s:
+        for invoice in s.exec(select(Invoice).where(Invoice.vendor_id == supplier["acme"])).all():
+            invoice.document_supplier_country_code = "LT"
+            invoice.document_supplier_vat_number = "LT10001174716"
+        s.get(Invoice, supplier["inv_a"]).document_supplier_country_code = "DE"
+        s.commit()
+
+    body = _detail(client, supplier["acme"])
+
+    assert body["country_code"] == "DK"
+    assert body["document_country_code"] == "LT"
+    assert body["document_vat_number"] == "LT10001174716"
+
+
+def test_nothing_printed_is_none(client, supplier):
+    body = _detail(client, supplier["acme"])
+
+    assert body["document_country_code"] is None
+    assert body["document_vat_number"] is None

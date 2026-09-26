@@ -24,6 +24,8 @@ class ExtractedLines(BaseModel):
     currency: str | None = None
     invoice_number: str | None = None
     supplier_website: str | None = None
+    supplier_country_code: str | None = None
+    supplier_vat_number: str | None = None
     total: float | None = None
     tax: float | None = None
     subtotal: float | None = None

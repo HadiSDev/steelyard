@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 from web_api.connectors.base import DocumentPayload
+from web_api.vat import international_vat
 from web_api.website import site_root
 
 from ..agents import make_extractor
@@ -79,6 +80,14 @@ def document_content(payload: DocumentPayload) -> DocumentContent:
     )
 
 
+def country_code(value: str | None) -> str | None:
+    """A two-letter country code as read, upper-cased, or None when it is not one."""
+    code = (value or "").strip().upper()
+    if len(code) == 2 and code.isalpha():
+        return code
+    return None
+
+
 def extract_lines(payload: DocumentPayload, *, kickoff=None, look=None) -> ExtractedLines:
     """Extract the document's invoice lines, by whichever route it supports."""
     content = document_content(payload)
@@ -105,6 +114,10 @@ def extract_lines(payload: DocumentPayload, *, kickoff=None, look=None) -> Extra
         currency=extracted.currency,
         invoice_number=(extracted.invoice_number or "").strip() or None,
         supplier_website=site_root(extracted.supplier_website),
+        supplier_country_code=country_code(extracted.supplier_country_code),
+        supplier_vat_number=international_vat(
+            extracted.supplier_vat_number, country_code(extracted.supplier_country_code)
+        ),
         total=extracted.total,
         tax=extracted.tax,
         subtotal=extracted.subtotal,

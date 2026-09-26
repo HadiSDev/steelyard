@@ -706,3 +706,15 @@ def test_the_printed_supplier_website_is_kept_on_the_invoice(engine, synced):
     docs.run_documents(extract=extract)
 
     assert _invoice(engine).document_supplier_website == 'https://danskkaffe.dk/'
+
+
+def test_the_printed_supplier_country_and_vat_number_are_kept_on_the_invoice(engine, synced):
+    def extract(payload: DocumentPayload) -> ExtractedLines:
+        return ExtractedLines(lines=[LineItem(description='x', amount=1000.0)],
+                              supplier_country_code='LT', supplier_vat_number='LT10001174716')
+
+    docs.run_documents(extract=extract)
+
+    invoice = _invoice(engine)
+    assert invoice.document_supplier_country_code == 'LT'
+    assert invoice.document_supplier_vat_number == 'LT10001174716'

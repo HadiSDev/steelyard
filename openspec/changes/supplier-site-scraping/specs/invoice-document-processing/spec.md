@@ -30,3 +30,11 @@ The document-processing CLI SHALL accept `--reprocess`, which first puts the sel
 - **WHEN** an invoice's document is being read and the CLI runs with `--reprocess`
 - **THEN** that invoice is not put back in the queue
 
+### Requirement: Extraction SHALL keep the supplier country and VAT number the document prints
+
+Extraction SHALL store the supplier's country and VAT number as the document prints them on the invoice, as `document_supplier_country_code` (a two-letter code, upper case, or none when what was read is not one) and `document_supplier_vat_number` (in its international form, with the country prefix), beside the ERP's facts about the supplier, which they never overwrite.
+
+#### Scenario: A Lithuanian bank's statement
+
+- **WHEN** a document prints the supplier's country as `lt` and its VAT number as `100 011 747 16`
+- **THEN** the invoice's `document_supplier_country_code` is `LT` and its `document_supplier_vat_number` is `LT10001174716`

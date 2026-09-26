@@ -421,6 +421,10 @@ export interface VendorInvoiceRead {
 /** A supplier with its figures, categories and latest invoices (`GET /vendors/{id}/detail`). */
 export interface VendorDetailRead extends VendorRead {
   description_source: string | null
+  /** What the supplier's invoices most often print, beside the ERP's `country_code`. */
+  document_country_code: string | null
+  /** What the supplier's invoices most often print, beside the ERP's `vat_number`. */
+  document_vat_number: string | null
   invoice_count: number
   first_invoice_date: string | null
   last_invoice_date: string | null

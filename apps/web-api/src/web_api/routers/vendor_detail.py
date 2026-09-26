@@ -46,6 +46,12 @@ def vendor_detail(
         description=vendor.description,
         description_source=vendor.description_source,
         website=known_website(session, vendor),
+        document_country_code=_most_printed(
+            session, Invoice.document_supplier_country_code, company_ids, vendor_id
+        ),
+        document_vat_number=_most_printed(
+            session, Invoice.document_supplier_vat_number, company_ids, vendor_id
+        ),
         invoice_count=invoice_count,
         first_invoice_date=first_date,
         last_invoice_date=last_date,
@@ -53,6 +59,17 @@ def vendor_detail(
         categories=_category_spend(session, company_ids, vendor_id),
         recent_invoices=_recent_invoices(session, company_ids, vendor_id),
     )
+
+
+def _most_printed(session: Session, column, company_ids: list[str], vendor_id: str) -> str | None:
+    """The value the supplier's invoices to the caller most often print in `column`."""
+    return session.exec(
+        select(column)
+        .where(Invoice.vendor_id == vendor_id, Invoice.company_id.in_(company_ids), column.is_not(None))
+        .group_by(column)
+        .order_by(func.count().desc(), column)
+        .limit(1)
+    ).first()
 
 
 def _category_spend(

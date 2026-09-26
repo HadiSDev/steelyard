@@ -40,7 +40,7 @@ When site crawling is enabled, enrichment SHALL first try to describe a supplier
 
 ### Requirement: A website the supplier's invoices state SHALL be crawled before any is searched for
 
-A supplier's known website is the one set on it, else the one its invoices' documents print most often among those whose domain names the supplier (by the same name match that picks a site from search results). A printed website whose domain does not name the supplier, such as a deposit guarantee scheme in a bank's footer, SHALL NOT be a known website. When a supplier has a known website, enrichment SHALL crawl that site directly, without looking for one among the search results, and SHALL keep it as the supplier's website whether or not the site yields the description. Only when no website is known SHALL enrichment search for the supplier's name to find one.
+A supplier's known website is the one set on it, else the one its invoices' documents print most often among those whose domain names the supplier: by the same name match that picks a site from search results, or, since the supplier printed it, by a domain label that is any word of the name (of at least two letters, legal forms dropped) or begins with the name's first word. A printed website whose domain does not name the supplier, such as a deposit guarantee scheme in a bank's footer, SHALL NOT be a known website. When a supplier has a known website, enrichment SHALL crawl that site directly, without looking for one among the search results, and SHALL keep it as the supplier's website whether or not the site yields the description. Only when no website is known SHALL enrichment search for the supplier's name to find one.
 
 #### Scenario: The invoices print the website
 
@@ -91,3 +91,17 @@ With enrichment off, or with a lookup that fails or returns nothing, the supplie
 
 - **WHEN** crawling is enabled but the browser cannot be launched
 - **THEN** each supplier is described from its search snippets and the enrichment run completes
+
+### Requirement: A described supplier SHALL be able to get a website without being described again
+
+The enrichment CLI SHALL accept `--websites`, which, instead of describing suppliers, stores a website for each described supplier that has none, leaving its description untouched. The website SHALL be its known website when it has one; otherwise one found for its name among the search results, kept only when crawling it confirms it is the supplier's own site. With crawling off, only a known website SHALL be stored.
+
+#### Scenario: A described supplier gets its website
+
+- **WHEN** `--websites` runs with crawling on for a described supplier with no website whose site is found and confirmed
+- **THEN** its website is stored and its description is unchanged
+
+#### Scenario: Nothing confirmed
+
+- **WHEN** no site is found for the supplier, or its site says it belongs to someone else
+- **THEN** no website is stored

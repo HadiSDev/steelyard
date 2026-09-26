@@ -71,3 +71,17 @@ A site the LLM says is not the supplier's, or an answer that cannot be parsed, S
 
 - **WHEN** the LLM's answer is not valid JSON
 - **THEN** the site yields no description and enrichment falls back to the search snippets
+
+### Requirement: A description SHALL be written in English, and a product's site SHALL NOT count as the supplier's
+
+A supplier's description SHALL be written in English whatever the language of the site or snippets it is written from. When deciding whether a crawled site is the supplier's own, a site for one of the supplier's products or services rather than for the company itself SHALL NOT count.
+
+#### Scenario: A Danish site
+
+- **WHEN** the supplier's site is in Danish
+- **THEN** its description is written in English
+
+#### Scenario: A product's site
+
+- **WHEN** the crawled site is `ai.studio`, a product of Google Cloud EMEA Limited
+- **THEN** it is not taken as the supplier's website

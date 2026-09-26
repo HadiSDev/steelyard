@@ -97,3 +97,17 @@ While the first page loads the table SHALL show placeholder rows of the final la
 
 - **WHEN** the overview request fails
 - **THEN** an error state is shown instead of the table
+
+### Requirement: The detail page SHALL show where the invoices disagree with the ERP about the supplier
+
+For the supplier's country and VAT number, the page SHALL show the ERP's value, or the invoices' value marked "From its invoices" when the ERP has none, and SHALL warn, naming what the invoices say, when the two differ. Agreeing values, compared without regard to case or spaces, SHALL show no note.
+
+#### Scenario: The invoices name another country
+
+- **WHEN** the ERP holds Denmark and the invoices print Lithuania
+- **THEN** the page shows Denmark with a warning that its invoices say Lithuania
+
+#### Scenario: Only the invoices know the VAT number
+
+- **WHEN** the ERP has no VAT number and the invoices print `LT10001174716`
+- **THEN** the page shows `LT10001174716` marked "From its invoices"

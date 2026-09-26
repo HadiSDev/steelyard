@@ -27,6 +27,8 @@ class Invoice(SQLModel, table=True):
     document_tax: Optional[Decimal] = Field(sa_type=Numeric(14, 2), nullable=True)
     document_subtotal: Optional[Decimal] = Field(sa_type=Numeric(14, 2), nullable=True)
     document_supplier_website: Optional[str] = Field(sa_type=String, nullable=True)
+    document_supplier_country_code: Optional[str] = Field(sa_type=String(2), nullable=True)
+    document_supplier_vat_number: Optional[str] = Field(sa_type=String, nullable=True)
 
     base_currency: Optional[str] = Field(sa_type=String(3), nullable=True)
     base_total: Optional[Decimal] = Field(sa_type=Numeric(14, 2), nullable=True)

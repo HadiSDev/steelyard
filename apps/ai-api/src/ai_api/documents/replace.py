@@ -144,6 +144,8 @@ def replace_invoice_lines(
 
     invoice.document_invoice_number = extracted.invoice_number
     invoice.document_supplier_website = extracted.supplier_website
+    invoice.document_supplier_country_code = extracted.supplier_country_code
+    invoice.document_supplier_vat_number = extracted.supplier_vat_number
 
     invoice.document_total = document_total
     invoice.document_tax = document_tax
