@@ -3,12 +3,16 @@ from __future__ import annotations
 
 import argparse
 import logging
+from functools import partial
 
 from sqlmodel import Session
 
 from web_api.db.session import engine
 
 from .. import config
+from .site.crawler import crawl_site
+from .site.fetch import fetch_site
+from .supplier_profile import describe_supplier
 from .vendors import describe_vendors
 
 logger = logging.getLogger("ai_api.enrichment")
@@ -39,9 +43,18 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0
 
+    if config.SUPPLIER_CRAWL_ENABLED:
+        describe = partial(describe_supplier, crawl_fn=partial(crawl_site, fetch_site=fetch_site))
+    else:
+        print(
+            "SUPPLIER_CRAWL_ENABLED is not set, so suppliers are described from search\n"
+            "snippets only. Set it, after running `crawl4ai-setup`, to read their own websites."
+        )
+        describe = describe_supplier
+
     with Session(engine) as session:
         result = describe_vendors(
-            session, company_id=args.company_id, limit=args.limit
+            session, company_id=args.company_id, limit=args.limit, describe=describe
         )
 
     if not result.considered:

@@ -2,7 +2,7 @@
 
 ### Requirement: The supplier's own website SHALL be found from search results by its domain
 
-Enrichment SHALL choose the supplier's website from the web search results for its name, taking the first result whose registrable domain matches the supplier's name. A domain matches when, after lowercasing and dropping legal-form words (such as "A/S", "ApS", "GmbH", "Ltd", "Limited", "Inc", "AB", "AS", "BV") and punctuation, the domain's label contains the supplier's distinctive name, or the name's words joined together.
+Enrichment SHALL choose the supplier's website from the web search results for its name, taking the first result whose host names the supplier. The name is lowercased, Danish letters are spelled as domains spell them (æ→ae, ø→oe, å→aa), punctuation and legal-form words (such as "A/S", "ApS", "GmbH", "Ltd", "Limited", "Inc", "AB", "BV") are dropped, and its words are joined cumulatively ("Dansk Kaffe ApS" gives `dansk` and `danskkaffe`), keeping keys of at least three characters. A host names the supplier when one of its labels other than the top-level domain, with hyphens removed, equals one of those keys or contains the full joined name.
 
 Results on directories, company registries, social networks, marketplaces and encyclopedias SHALL never be chosen, whatever their domain says. The website stored SHALL be the site's root (`https://<host>/`), not the page the search returned.
 

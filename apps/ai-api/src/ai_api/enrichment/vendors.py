@@ -10,7 +10,7 @@ from sqlmodel import Session, select
 from web_api.db.models import Invoice, Vendor
 
 from .. import config
-from ..web_context import get_supplier_context
+from .supplier_profile import SupplierProfile, describe_supplier
 
 logger = logging.getLogger("ai_api.enrichment")
 
@@ -60,9 +60,9 @@ def describe_vendors(
     company_id: str | None = None,
     limit: int | None = None,
     enabled: bool | None = None,
-    describe: Callable[[str, str | None], str] | None = None,
+    describe: Callable[[str, str | None], SupplierProfile] | None = None,
 ) -> EnrichmentResult:
-    """Research and store a description for every vendor that has none."""
+    """Research and store a description, and the website it came from, for every vendor that has none."""
     if enabled is None:
         enabled = config.VENDOR_ENRICHMENT_ENABLED
     if not enabled:
@@ -70,7 +70,7 @@ def describe_vendors(
         return EnrichmentResult(0, 0, 0, 0)
 
     if describe is None:
-        describe = get_supplier_context
+        describe = describe_supplier
 
     pending = vendors_needing_description(session, company_id=company_id, limit=limit)
     described = not_found = skipped = 0
@@ -80,11 +80,13 @@ def describe_vendors(
             skipped += 1
             continue
         try:
-            note = (describe(vendor.name, vendor.country_code) or "").strip()
+            profile = describe(vendor.name, vendor.country_code)
         except Exception as exc:  # noqa: BLE001
             logger.warning("could not describe %s: %s", vendor.name, exc)
             not_found += 1
             continue
+
+        note = (profile.description or "").strip()
 
         if not note:
             not_found += 1
@@ -97,6 +99,8 @@ def describe_vendors(
 
         vendor.description = note
         vendor.description_source = WEB
+        if profile.website and not vendor.website:
+            vendor.website = profile.website
         session.add(vendor)
         described += 1
         logger.info("described %s: %s", vendor.name, note[:80])

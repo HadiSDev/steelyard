@@ -7,6 +7,7 @@ dependencies = [
     "web-api",
     "anls",
     "crewai>=1.14.6",
+    "crawl4ai>=0.7.0",
     "crewai-tools>=1.14.6",
     "ddgs>=9.14.4",
     "faker>=40.23.0",

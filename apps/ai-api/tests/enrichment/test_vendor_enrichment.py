@@ -5,6 +5,7 @@ import pytest
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine, select
 
+from ai_api.enrichment.supplier_profile import SupplierProfile
 from ai_api.enrichment.vendors import (
     HUMAN,
     WEB,
@@ -33,13 +34,13 @@ def _vendor(s: Session, name: str, **kwargs) -> Vendor:
     return vendor
 
 
-def _describing(text: str):
-    """A stub lookup that answers `text` and records who it was asked about."""
+def _describing(text: str, website: str | None = None):
+    """A stub lookup that answers `text` from `website` and records who it was asked about."""
     asked: list[str] = []
 
-    def describe(name: str, country_code: str | None) -> str:
+    def describe(name: str, country_code: str | None) -> SupplierProfile:
         asked.append(name)
-        return text
+        return SupplierProfile(text, website)
 
     describe.asked = asked  # type: ignore[attr-defined]
     return describe
@@ -67,6 +68,54 @@ def test_a_supplier_is_described_and_stamped(session):
     assert vendor.description == "Danish State Railways."
     assert vendor.description_source == WEB
     assert result.described == 1
+
+
+def test_the_website_the_description_came_from_is_stored(session):
+    _vendor(session, "DSB")
+
+    describe_vendors(
+        session, enabled=True,
+        describe=_describing("Danish State Railways.", "https://www.dsb.dk/"),
+    )
+
+    assert session.exec(select(Vendor)).first().website == "https://www.dsb.dk/"
+
+
+def test_a_website_already_set_stands(session):
+    _vendor(session, "DSB", website="https://www.dsb.dk/en/")
+
+    describe_vendors(
+        session, enabled=True,
+        describe=_describing("Danish State Railways.", "https://www.dsb.dk/"),
+    )
+
+    vendor = session.exec(select(Vendor)).first()
+    assert vendor.website == "https://www.dsb.dk/en/"
+    assert vendor.description == "Danish State Railways."
+
+
+def test_a_description_from_snippets_stores_no_website(session):
+    _vendor(session, "DSB")
+
+    describe_vendors(session, enabled=True, describe=_describing("Danish State Railways."))
+
+    assert session.exec(select(Vendor)).first().website is None
+
+
+def test_a_website_is_not_stored_when_the_description_is_skipped(session):
+    vendor = _vendor(session, "DSB")
+
+    def describe(name: str, country_code: str | None) -> SupplierProfile:
+        other = session.get(Vendor, vendor.id)
+        other.description = "Corrected by hand."
+        other.description_source = HUMAN
+        session.add(other)
+        session.commit()
+        return SupplierProfile("A model's guess.", "https://www.dsb.dk/")
+
+    describe_vendors(session, enabled=True, describe=describe)
+
+    assert session.get(Vendor, vendor.id).website is None
 
 
 def test_a_supplier_is_researched_once(session):
@@ -103,13 +152,13 @@ def test_a_humans_description_is_never_overwritten(session):
 def test_a_description_written_during_the_lookup_survives(session):
     vendor = _vendor(session, "DSB")
 
-    def describe(name: str, country_code: str | None) -> str:
+    def describe(name: str, country_code: str | None) -> SupplierProfile:
         other = session.get(Vendor, vendor.id)
         other.description = "Rail operator, corrected by hand."
         other.description_source = HUMAN
         session.add(other)
         session.commit()
-        return "A model's guess."
+        return SupplierProfile("A model's guess.", "https://www.dsb.dk/")
 
     result = describe_vendors(session, enabled=True, describe=describe)
 
@@ -121,7 +170,7 @@ def test_a_description_written_during_the_lookup_survives(session):
 def test_a_failed_lookup_writes_nothing_and_raises_nothing(session):
     _vendor(session, "Obscure Holding ApS")
 
-    def exploding(name: str, country_code: str | None) -> str:
+    def exploding(name: str, country_code: str | None) -> SupplierProfile:
         raise ConnectionError("connection refused")
 
     result = describe_vendors(session, enabled=True, describe=exploding)

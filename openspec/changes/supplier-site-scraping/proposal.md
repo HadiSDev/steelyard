@@ -22,7 +22,7 @@ A supplier's description is written today from DuckDuckGo result snippets: a few
 
 ## Impact
 
-- **ai-api**: new modules under `enrichment/` for site discovery, crawling and the supplier profile; `describe_vendors` stores a website as well as a description; `web_context.get_supplier_context` stays as the fallback; new config values; tests.
+- **ai-api**: a new `enrichment/site/` package (discovery, crawl, fetch) and `enrichment/supplier_profile.py`, which replaces `web_context.get_supplier_context` and reuses its snippet summary as the fallback; `describe_vendors` stores a website as well as a description; new config values; tests.
 - **web-api**: `Vendor.website` column with migration `0013`; `website` added to `VendorRead` and `VendorOverviewRead`.
 - **Dependencies**: `crawl4ai` added to `apps/ai-api/pyproject.toml`. Installing it and its browser (`uv sync`, then `crawl4ai-setup`) is left to whoever runs enrichment.
 - **Not in scope**: showing the website on the Suppliers page. That page's spec is still in the unarchived `suppliers-page` change; the link can follow once it is archived.
