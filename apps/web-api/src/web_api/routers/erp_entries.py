@@ -10,6 +10,7 @@ from sqlmodel import Session, select
 
 from web_api.db.models import (
     AuditLog,
+    Company,
     ErpAccount,
     ErpEntry,
     File,
@@ -19,7 +20,7 @@ from web_api.db.models import (
     Vendor,
 )
 from web_api.db.models.enums import EXPENSE_ACCOUNT_TYPE
-from .. import config
+from .. import config, spend_coverage
 from ..auth.deps import TenantScope, get_session, resolve_company_ids, tenant_scope
 from ..schemas import (
     AuditLogRead,
@@ -29,11 +30,14 @@ from ..schemas import (
     InvoiceDetailRead,
     InvoiceLineRead,
     Page,
+    Report,
+    SpendCoverageRow,
     VoucherAuditRead,
     VoucherDetailRead,
     VoucherGroupRead,
 )
 from ..reconcile import reconcile_lines, totals_agree
+from ..spend_coverage import LineState, VoucherSpend
 from .entry_rows import EntryRow, InvoiceHeaderState
 from .invoices import _invoice_read
 
@@ -280,9 +284,7 @@ def list_voucher_groups(
 
     buckets: dict[tuple[str, str], list[EntryRow]] = {pair: [] for pair in order}
     for row in rows:
-        entry = row.entry
-        key = f"v:{entry.voucher_id}" if entry.voucher_id is not None else f"e:{entry.id}"
-        bucket = buckets.get((entry.company_id, key))
+        bucket = buckets.get(_bucket_key(row.entry))
         if bucket is not None:
             bucket.append(row)
 
@@ -305,6 +307,92 @@ def list_voucher_groups(
             )
         )
     return Page(items=items, page=page, page_size=page_size, total=total)
+
+
+@router.get("/erp-entries/vouchers/summary", response_model=Report[SpendCoverageRow])
+def summarize_voucher_groups(
+    company_id: str | None = Query(default=None),
+    entry_type: str | None = Query(default=None),
+    source_invoice_id: str | None = Query(default=None),
+    status_filter: str | None = Query(default=None, alias="status"),
+    date_from: date | None = Query(default=None, alias="from"),
+    date_to: date | None = Query(default=None, alias="to"),
+    vendor_id: str | None = Query(default=None),
+    needs_review: bool | None = Query(default=None),
+    scope: TenantScope = Depends(tenant_scope),
+    session: Session = Depends(get_session),
+) -> Report[SpendCoverageRow]:
+    """Posted spend and categorization over every voucher the same filters list."""
+    company_ids = resolve_company_ids(scope, company_id)
+    if not company_ids:
+        return Report(rows=[])
+
+    conditions = _entry_conditions(
+        company_ids,
+        entry_type=entry_type,
+        source_invoice_id=source_invoice_id,
+        status_filter=status_filter,
+        date_from=date_from,
+        date_to=date_to,
+        vendor_id=vendor_id,
+        needs_review=needs_review,
+    )
+    buckets: dict[tuple[str, str], list[EntryRow]] = {}
+    for row in _entry_rows(session, _entry_select().where(*conditions)):
+        buckets.setdefault(_bucket_key(row.entry), []).append(row)
+
+    vouchers = []
+    invoice_ids = set()
+    for (group_company_id, _), rows in buckets.items():
+        amount, _, _, _, unconverted_count = _voucher_amount(rows, "base")
+        vouchers.append(VoucherSpend(group_company_id, amount, unconverted_count > 0))
+        invoice_id = _group_invoice_id(rows)
+        if invoice_id is not None:
+            invoice_ids.add(invoice_id)
+
+    return Report(rows=spend_coverage.tally(
+        vouchers,
+        _line_states(session, invoice_ids),
+        _base_currencies(session, company_ids),
+    ))
+
+
+def _bucket_key(entry: ErpEntry) -> tuple[str, str]:
+    """The (company, group key) a posting belongs to, matching `_GROUP_KEY`."""
+    if entry.voucher_id is not None:
+        return entry.company_id, f"v:{entry.voucher_id}"
+    return entry.company_id, f"e:{entry.id}"
+
+
+def _line_states(session: Session, invoice_ids: set[str]) -> list[LineState]:
+    """The categorization state of every line on the given invoices."""
+    if not invoice_ids:
+        return []
+    rows = session.exec(
+        select(
+            InvoiceLine.company_id,
+            InvoiceLine.status,
+            InvoiceLine.confidence,
+            InvoiceLine.base_amount,
+        ).where(InvoiceLine.invoice_id.in_(invoice_ids))  # type: ignore[union-attr]
+    ).all()
+    return [
+        LineState(
+            company_id=row.company_id,
+            status=str(row.status),
+            confidence=row.confidence,
+            base_amount=row.base_amount,
+        )
+        for row in rows
+    ]
+
+
+def _base_currencies(session: Session, company_ids: list[str]) -> dict[str, str]:
+    """`{company_id: base_currency}` for the given companies."""
+    rows = session.exec(
+        select(Company.id, Company.base_currency).where(Company.id.in_(company_ids))  # type: ignore[union-attr]
+    ).all()
+    return {row.id: row.base_currency for row in rows}
 
 
 def _shared(values: list) -> object | None:

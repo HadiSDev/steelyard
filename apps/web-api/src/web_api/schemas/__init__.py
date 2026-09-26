@@ -14,6 +14,7 @@ from .companies.runs import PipelineRunCreate, PipelineRunRead
 from .erp.accounts import ErpAccountRead, ErpAccountUpdate
 from .erp.actions import ConnectionTestResult, RefreshAccountsResult
 from .erp.catalog import CredentialFieldRead, ErpTypeRead
+from .erp.coverage import SpendCoverageRow
 from .erp.entries import ErpEntryRead, VoucherDetailRead, VoucherGroupRead
 from .erp.integration_replace import (
     IntegrationReplace,
@@ -95,6 +96,7 @@ __all__ = [
     "SpendCategoryRead",
     "SpendCategorySuggestionRead",
     "SpendCategoryUpdate",
+    "SpendCoverageRow",
     "SpendTreeCreate",
     "SpendTreeDeleteResult",
     "SpendTreeDetailRead",
