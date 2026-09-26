@@ -81,6 +81,7 @@ function CompaniesSection() {
       onIncludeInactiveChange={setIncludeInactive}
       canManage={canManage}
       canDelete={principal.isSystemAdmin}
+      canRunPipelines={principal.isSystemAdmin}
       erpTypes={erpTypes.data ?? []}
       erpTypesLoading={erpTypes.isPending && canManage}
       integrations={integrations.data ?? []}

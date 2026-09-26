@@ -74,3 +74,28 @@ export function fromIsoDate(
   const parsed = new Date(`${value}T00:00:00`)
   return Number.isNaN(parsed.getTime()) ? undefined : parsed
 }
+
+/** Unit steps for `formatRelativeTime`, each with how many seconds it spans. */
+const RELATIVE_UNITS: ReadonlyArray<[Intl.RelativeTimeFormatUnit, number]> = [
+  ['day', 86_400],
+  ['hour', 3_600],
+  ['minute', 60],
+]
+
+/** How long ago (or until) an ISO timestamp is, e.g. "5 minutes ago" or "just now". */
+export function formatRelativeTime(
+  value: string,
+  now: Date = new Date(),
+): string {
+  const seconds = (new Date(value).getTime() - now.getTime()) / 1000
+  if (Number.isNaN(seconds)) {
+    return value
+  }
+  const formatter = new Intl.RelativeTimeFormat('en-GB', { numeric: 'auto' })
+  for (const [unit, span] of RELATIVE_UNITS) {
+    if (Math.abs(seconds) >= span) {
+      return formatter.format(Math.round(seconds / span), unit)
+    }
+  }
+  return 'just now'
+}

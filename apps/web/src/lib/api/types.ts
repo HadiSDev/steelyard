@@ -262,6 +262,33 @@ export interface RecategorizeResult {
   queued: number
 }
 
+/** A pipeline stage a system admin can run for one company. */
+export type PipelineRunKind = 'sync' | 'read_documents' | 'categorize'
+
+/** Where a pipeline run is in its life: `queued → running → succeeded | failed`. */
+export type PipelineRunStatus = 'queued' | 'running' | 'succeeded' | 'failed'
+
+/** One requested pipeline run, from `GET /companies/{id}/runs`. */
+export interface PipelineRunRead {
+  id: string
+  company_id: string
+  kind: PipelineRunKind
+  status: PipelineRunStatus
+  /** `system` for runs the worker started on its own, otherwise the requesting user's id. */
+  requested_by: string
+  requested_at: string
+  started_at: string | null
+  finished_at: string | null
+  /** The run's counts once finished; its shape depends on the kind. */
+  summary: Record<string, unknown> | null
+  error: string | null
+}
+
+/** `POST /companies/{id}/runs`. */
+export interface PipelineRunCreate {
+  kind: PipelineRunKind
+}
+
 /** The conversion carried on every money-bearing payload. */
 export interface Converted {
   base_currency: string | null

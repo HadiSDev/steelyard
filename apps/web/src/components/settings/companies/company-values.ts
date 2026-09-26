@@ -48,6 +48,16 @@ export function integrationsFor(
   ]
 }
 
+/** Whether a company has an ERP integration that is still connected. */
+export function hasConnectedErp(
+  integrations: Array<ErpIntegrationRead>,
+  companyId: string,
+): boolean {
+  return integrations.some(
+    (row) => row.company_id === companyId && row.disconnected_at === null,
+  )
+}
+
 export function toValues(company: CompanyRead): CompanyValues {
   return {
     name: company.name,

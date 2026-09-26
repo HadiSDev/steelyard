@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fromIsoDate, toIsoDate } from './format'
+import { formatRelativeTime, fromIsoDate, toIsoDate } from './format'
 
 describe('toIsoDate / fromIsoDate', () => {
   it('writes a date as the YYYY-MM-DD string the API takes', () => {
@@ -38,5 +38,25 @@ describe('toIsoDate / fromIsoDate', () => {
   it('refuses a string that is not a date rather than returning Invalid Date', () => {
     expect(fromIsoDate('not-a-date')).toBeUndefined()
     expect(fromIsoDate('2026-13-45')).toBeUndefined()
+  })
+})
+
+describe('formatRelativeTime', () => {
+  const now = new Date('2026-09-26T12:00:00Z')
+
+  it('says just now for the last minute', () => {
+    expect(formatRelativeTime('2026-09-26T11:59:30Z', now)).toBe('just now')
+  })
+
+  it('counts minutes, hours and days back', () => {
+    expect(formatRelativeTime('2026-09-26T11:55:00Z', now)).toBe(
+      '5 minutes ago',
+    )
+    expect(formatRelativeTime('2026-09-26T09:00:00Z', now)).toBe('3 hours ago')
+    expect(formatRelativeTime('2026-09-24T12:00:00Z', now)).toBe('2 days ago')
+  })
+
+  it('returns an unparseable value unchanged', () => {
+    expect(formatRelativeTime('not a date', now)).toBe('not a date')
   })
 })

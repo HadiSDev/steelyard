@@ -43,9 +43,12 @@ import {
   SubmitHandled,
 } from '#/components/settings/form'
 import { CompanyDialog } from './company-dialog'
+import { CompanyLatestRun } from './company-latest-run'
+import { CompanyRunMenu } from './company-run-menu'
 import {
   changedFields,
   deleteBlockedFrom,
+  hasConnectedErp,
   integrationsFor,
   replaceBlockedFrom,
   toValues,
@@ -79,6 +82,8 @@ export interface CompaniesPanelProps {
   canManage: boolean
   /** Whether the reader holds the platform flag to delete companies outright. */
   canDelete?: boolean
+  /** Whether the reader holds the platform flag to run a company's pipeline. */
+  canRunPipelines?: boolean
   /** The connectable ERP systems, from `GET /erp-types`. */
   erpTypes?: Array<ErpTypeRead>
   erpTypesLoading?: boolean
@@ -136,6 +141,7 @@ export function CompaniesPanel({
   onIncludeInactiveChange,
   canManage,
   canDelete = false,
+  canRunPipelines = false,
   erpTypes = [],
   erpTypesLoading = false,
   integrations = [],
@@ -416,7 +422,12 @@ export function CompaniesPanel({
             <TableBody>
               {companies.map((company) => (
                 <TableRow key={company.id}>
-                  <TableCell className="font-medium">{company.name}</TableCell>
+                  <TableCell className="font-medium">
+                    {company.name}
+                    {canRunPipelines ? (
+                      <CompanyLatestRun companyId={company.id} />
+                    ) : null}
+                  </TableCell>
                   <TableCell>{company.country_code ?? '—'}</TableCell>
                   <TableCell>{company.base_currency}</TableCell>
                   <TableCell>{company.vat_number ?? '—'}</TableCell>
@@ -427,7 +438,13 @@ export function CompaniesPanel({
                   </TableCell>
                   {canManage ? (
                     <TableCell className="text-right">
-                      <div className="flex justify-end">
+                      <div className="flex items-center justify-end gap-2">
+                        {canRunPipelines ? (
+                          <CompanyRunMenu
+                            company={company}
+                            hasErp={hasConnectedErp(integrations, company.id)}
+                          />
+                        ) : null}
                         <DropdownMenu>
                           <DropdownMenuTrigger
                             render={
