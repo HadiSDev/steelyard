@@ -23,10 +23,8 @@ import {
   SubmitRow,
   useSettingsSubmit,
 } from '#/components/settings/form'
-import {
-  initials,
-  validateImage,
-} from '#/components/settings/profile/profile-panel'
+import { validateImage } from '#/components/settings/profile/profile-panel'
+import { initials } from '#/lib/format/initials'
 
 export interface OrganizationValues {
   name: string

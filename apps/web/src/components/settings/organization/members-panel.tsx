@@ -17,7 +17,7 @@ import {
 import { clerkErrorCode, serverErrorMessage } from '#/lib/form-errors'
 import { meKey } from '#/lib/api/organization'
 import { ReadOnlyNotice, SettingsCard } from '#/components/settings/form'
-import { initials } from '#/components/settings/profile/profile-panel'
+import { initials } from '#/lib/format/initials'
 
 export interface MemberRow {
   /** Clerk membership id — what role changes and removals address. */

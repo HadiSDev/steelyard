@@ -18,6 +18,7 @@ import {
   SubmitRow,
   useSettingsSubmit,
 } from '#/components/settings/form'
+import { initials } from '#/lib/format/initials'
 
 export interface ProfileValues {
   firstName: string
@@ -42,17 +43,6 @@ export function validateImage(file: File): string | null {
     return 'That image is larger than 5 MB. Choose a smaller one.'
   }
   return null
-}
-
-export function initials(value: string): string {
-  const parts = value.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) {
-    return '?'
-  }
-  if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase()
-  }
-  return (parts[0][0] + parts[1][0]).toUpperCase()
 }
 
 export interface ProfilePanelProps {

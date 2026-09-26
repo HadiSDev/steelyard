@@ -9,6 +9,8 @@ export const membershipListParams = {
 export interface OrgMembership {
   id: string
   name: string
+  /** The organization's uploaded logo; absent when it has none. */
+  imageUrl?: string
 }
 
 /** The user's organization memberships, by name, plus Clerk's activator. */
@@ -19,7 +21,13 @@ export function useOrgMemberships() {
   const memberships: Array<OrgMembership> = React.useMemo(
     () =>
       (data ?? [])
-        .map((m) => ({ id: m.organization.id, name: m.organization.name }))
+        .map((m) => ({
+          id: m.organization.id,
+          name: m.organization.name,
+          imageUrl: m.organization.hasImage
+            ? m.organization.imageUrl
+            : undefined,
+        }))
         .sort((a, b) => a.name.localeCompare(b.name)),
     [data],
   )

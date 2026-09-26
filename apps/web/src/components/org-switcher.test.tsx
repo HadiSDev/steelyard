@@ -99,6 +99,24 @@ describe('OrgSwitcher', () => {
     expect(screen.queryByRole('combobox')).toBeNull()
   })
 
+  it('labels the name as the organization and marks it with its initials', () => {
+    orgRows = [membership('org_acme', 'Acme A/S')]
+    renderSwitcher()
+
+    expect(screen.getByText('Organization')).toBeTruthy()
+    expect(screen.getByText('AA')).toBeTruthy()
+  })
+
+  it('shows the same identity inside the switcher when there are several', () => {
+    renderSwitcher()
+
+    const trigger = screen.getByRole('combobox', {
+      name: 'Switch organization',
+    })
+    expect(trigger.textContent).toContain('Organization')
+    expect(trigger.textContent).toContain('AA')
+  })
+
   it('renders a placeholder while memberships are loading', () => {
     orgsLoaded = false
     orgRows = []
