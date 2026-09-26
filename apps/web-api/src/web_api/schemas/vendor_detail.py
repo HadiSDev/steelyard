@@ -20,10 +20,15 @@ class VendorCategorySpendRead(BaseModel):
 
 
 class VendorInvoiceRead(BaseModel):
-    """One of the supplier's invoices, in its own currency."""
+    """One of the supplier's invoices, in its own currency.
+
+    `invoice_number` is the ERP's, else the one printed on the document; `voucher_number` is the
+    ERP voucher it was posted on.
+    """
 
     id: str
     invoice_number: str | None = None
+    voucher_number: str | None = None
     invoice_date: date | None = None
     company_name: str
     currency: str | None = None

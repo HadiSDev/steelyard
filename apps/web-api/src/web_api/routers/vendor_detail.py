@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, nulls_last
 from sqlmodel import Session, select
 
-from web_api.db.models import Company, Invoice, InvoiceLine, SpendCategory, Vendor
+from web_api.db.models import Company, ErpEntry, Invoice, InvoiceLine, SpendCategory, Vendor
 from web_api.vendor_spend import spend_by_vendor
 from ..auth.deps import TenantScope, get_session, resolve_company_ids, tenant_scope
 from ..schemas import VendorCategorySpendRead, VendorDetailRead, VendorInvoiceRead
@@ -94,10 +94,12 @@ def _recent_invoices(
         .order_by(nulls_last(Invoice.invoice_date.desc()), Invoice.created_at.desc(), Invoice.id)
         .limit(RECENT_INVOICE_LIMIT)
     ).all()
+    vouchers = _voucher_numbers(session, [invoice.id for invoice, _ in rows])
     return [
         VendorInvoiceRead(
             id=invoice.id,
-            invoice_number=invoice.invoice_number,
+            invoice_number=invoice.invoice_number or invoice.document_invoice_number,
+            voucher_number=vouchers.get(invoice.id),
             invoice_date=invoice.invoice_date,
             company_name=company_name,
             currency=invoice.currency,
@@ -106,3 +108,15 @@ def _recent_invoices(
         )
         for invoice, company_name in rows
     ]
+
+
+def _voucher_numbers(session: Session, invoice_ids: list[str]) -> dict[str, str]:
+    """`{invoice_id: the ERP voucher number it was posted on}`, for invoices posted on one."""
+    if not invoice_ids:
+        return {}
+    rows = session.exec(
+        select(ErpEntry.source_invoice_id, func.min(ErpEntry.voucher_number))
+        .where(ErpEntry.source_invoice_id.in_(invoice_ids), ErpEntry.voucher_number.is_not(None))
+        .group_by(ErpEntry.source_invoice_id)
+    ).all()
+    return {invoice_id: voucher_number for invoice_id, voucher_number in rows}

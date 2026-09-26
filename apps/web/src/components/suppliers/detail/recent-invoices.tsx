@@ -24,7 +24,21 @@ const STATUS_BADGES: Record<
   verified: { label: 'Verified', variant: 'success' },
 }
 
-/** The supplier's latest invoices, newest first. */
+function InvoiceNumber({ invoice }: { invoice: VendorInvoiceRead }) {
+  if (invoice.invoice_number) {
+    return <span className="font-mono">{invoice.invoice_number}</span>
+  }
+  if (invoice.voucher_number) {
+    return (
+      <span className="text-muted-foreground">
+        Voucher <span className="font-mono">{invoice.voucher_number}</span>
+      </span>
+    )
+  }
+  return <span className="text-muted-foreground">—</span>
+}
+
+/** The supplier's latest invoices, newest first; the company is named only when there are several. */
 export function RecentInvoices({
   invoices,
   invoiceCount,
@@ -36,6 +50,8 @@ export function RecentInvoices({
     invoiceCount > invoices.length
       ? `The latest ${invoices.length} of ${invoiceCount}`
       : undefined
+  const showCompany =
+    new Set(invoices.map((invoice) => invoice.company_name)).size > 1
 
   return (
     <Card>
@@ -45,20 +61,13 @@ export function RecentInvoices({
           <p className="text-sm text-muted-foreground">{shown}</p>
         ) : null}
       </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <Table className="min-w-[36rem] table-fixed">
-          <colgroup>
-            <col className="w-[18%]" />
-            <col className="w-[20%]" />
-            <col className="w-[26%]" />
-            <col className="w-[20%]" />
-            <col className="w-[16%]" />
-          </colgroup>
+      <CardContent>
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
               <TableHead>Invoice</TableHead>
-              <TableHead>Company</TableHead>
+              {showCompany ? <TableHead>Company</TableHead> : null}
               <TableHead className="text-right">Total</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
@@ -71,15 +80,15 @@ export function RecentInvoices({
                   <TableCell className="whitespace-nowrap">
                     {formatDay(invoice.invoice_date)}
                   </TableCell>
-                  <TableCell className="font-mono text-sm break-all">
-                    {invoice.invoice_number ?? (
-                      <span className="text-muted-foreground">—</span>
-                    )}
+                  <TableCell className="text-sm break-all">
+                    <InvoiceNumber invoice={invoice} />
                   </TableCell>
-                  <TableCell className="truncate" title={invoice.company_name}>
-                    {invoice.company_name}
-                  </TableCell>
-                  <TableCell className="text-right font-mono tabular-nums">
+                  {showCompany ? (
+                    <TableCell className="break-words">
+                      {invoice.company_name}
+                    </TableCell>
+                  ) : null}
+                  <TableCell className="text-right font-mono whitespace-nowrap tabular-nums">
                     {invoice.total === null ? (
                       <span className="text-muted-foreground">—</span>
                     ) : (

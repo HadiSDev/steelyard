@@ -7,7 +7,10 @@ from decimal import Decimal
 import pytest
 from sqlmodel import Session
 
-from web_api.db.models import Company, Invoice, InvoiceLine, SpendCategory, SpendTree, Vendor
+from web_api.db.models import (
+    Company, ErpAccount, ErpEntry, ErpIntegration, Invoice, InvoiceLine, SpendCategory, SpendTree,
+    Vendor,
+)
 
 from web_api_testkit import auth
 
@@ -150,3 +153,39 @@ def test_a_caller_without_companies_sees_nothing(client, supplier):
     res = client.get(_url(supplier["acme"]), headers=auth("tok_empty"))
 
     assert res.status_code == 404
+
+
+def test_an_invoice_is_numbered_by_its_document_when_the_erp_has_no_number(client, engine, supplier):
+    with Session(engine) as s:
+        invoice = s.get(Invoice, supplier["inv_a"])
+        invoice.invoice_number = None
+        invoice.document_invoice_number = "2026-0412"
+        s.add(invoice)
+        s.commit()
+
+    invoices = {i["id"]: i for i in _detail(client, supplier["acme"])["recent_invoices"]}
+
+    assert invoices[supplier["inv_a"]]["invoice_number"] == "2026-0412"
+
+
+def test_an_invoice_carries_the_voucher_it_was_posted_on(client, engine, supplier):
+    with Session(engine) as s:
+        integration = ErpIntegration(company_id=supplier["comp_a"], erp_type="mock", label="ERP")
+        s.add(integration)
+        s.commit()
+        account = ErpAccount(erp_integration_id=integration.id, erp_account_code="6200",
+                             erp_account_name="Software", erp_account_type="expense")
+        s.add(account)
+        s.commit()
+        s.add(ErpEntry(company_id=supplier["comp_a"], erp_account_id=account.id,
+                       source_invoice_id=supplier["inv_a"], voucher_id="v-4821",
+                       voucher_number="4821", entry_type="purchase_invoice",
+                       debit_amount=Decimal("100.00"), currency="DKK"))
+        s.commit()
+
+    invoices = {i["id"]: i for i in _detail(client, supplier["acme"])["recent_invoices"]}
+
+    assert invoices[supplier["inv_a"]]["voucher_number"] == "4821"
+    assert invoices[supplier["inv_a"]]["invoice_number"] == "A1"
+    unposted = [i for i in invoices.values() if i["id"] != supplier["inv_a"]]
+    assert all(i["voucher_number"] is None for i in unposted)

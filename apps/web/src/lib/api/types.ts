@@ -407,7 +407,10 @@ export interface VendorCategorySpendRead {
 /** One of a supplier's invoices, in its own currency. */
 export interface VendorInvoiceRead {
   id: string
+  /** The ERP's number, else the one printed on the document. */
   invoice_number: string | null
+  /** The ERP voucher the invoice was posted on. */
+  voucher_number: string | null
   invoice_date: string | null
   company_name: string
   currency: string | null

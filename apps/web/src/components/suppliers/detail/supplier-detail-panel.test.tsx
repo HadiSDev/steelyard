@@ -6,7 +6,11 @@ import {
   screen,
   within,
 } from '@testing-library/react'
-import type { VendorCategorySpendRead, VendorDetailRead } from '#/lib/api/types'
+import type {
+  VendorCategorySpendRead,
+  VendorDetailRead,
+  VendorInvoiceRead,
+} from '#/lib/api/types'
 import { SupplierDetailPanel } from './supplier-detail-panel'
 import type { SupplierDetailPanelProps } from './supplier-detail-panel'
 import { breakdownByCurrency } from './category-breakdown'
@@ -51,6 +55,7 @@ function detail(overrides: Partial<VendorDetailRead> = {}): VendorDetailRead {
       {
         id: 'i1',
         invoice_number: 'INV-2041',
+        voucher_number: '4821',
         invoice_date: '2026-09-18',
         company_name: 'Acme A/S',
         currency: 'EUR',
@@ -221,15 +226,66 @@ describe('SupplierDetailPanel — spend by category', () => {
 })
 
 describe('SupplierDetailPanel — latest invoices', () => {
-  it('lists each invoice with its company, total and status', () => {
+  function invoice(
+    overrides: Partial<VendorInvoiceRead> = {},
+  ): VendorInvoiceRead {
+    return {
+      id: 'i1',
+      invoice_number: 'INV-2041',
+      voucher_number: '4821',
+      invoice_date: '2026-09-18',
+      company_name: 'Acme A/S',
+      currency: 'EUR',
+      total: '134.00',
+      status: 'verified',
+      ...overrides,
+    }
+  }
+
+  it('lists each invoice with its total and status', () => {
     setup()
 
     const row = screen.getByText('INV-2041').closest('tr')
     expect(row).not.toBeNull()
     const cells = within(row as HTMLElement)
-    expect(cells.getByText('Acme A/S')).toBeTruthy()
     expect(cells.getByText('€134.00')).toBeTruthy()
     expect(cells.getByText('Verified')).toBeTruthy()
+  })
+
+  it('names the company only when the invoices went to several', () => {
+    setup()
+    expect(screen.queryByRole('columnheader', { name: 'Company' })).toBeNull()
+    cleanup()
+
+    setup({
+      supplier: detail({
+        recent_invoices: [
+          invoice(),
+          invoice({
+            id: 'i2',
+            invoice_number: 'INV-2040',
+            company_name: 'Acme Sverige AB',
+          }),
+        ],
+      }),
+    })
+    expect(screen.getByRole('columnheader', { name: 'Company' })).toBeTruthy()
+    expect(screen.getByText('Acme Sverige AB')).toBeTruthy()
+  })
+
+  it('falls back to the voucher it was posted on, then to a dash', () => {
+    setup({
+      supplier: detail({
+        recent_invoices: [
+          invoice({ invoice_number: null }),
+          invoice({ id: 'i2', invoice_number: null, voucher_number: null }),
+        ],
+      }),
+    })
+
+    const rows = screen.getAllByRole('row').slice(1)
+    expect(rows[0].textContent).toContain('Voucher 4821')
+    expect(within(rows[1]).getAllByText('—')).toHaveLength(1)
   })
 
   it('says when only the latest are shown', () => {
