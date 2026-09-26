@@ -3,7 +3,13 @@ from __future__ import annotations
 
 import pytest
 
-from web_api.website import name_keys, site_root, website_names_supplier
+from web_api.website import (
+    name_keys,
+    name_words,
+    printed_website_names_supplier,
+    site_root,
+    website_names_supplier,
+)
 
 
 @pytest.mark.parametrize("printed, expected", [
@@ -39,3 +45,24 @@ def test_a_website_names_the_supplier_only_when_its_domain_carries_the_name(webs
 
 def test_legal_forms_are_not_part_of_the_name():
     assert name_keys("Revolut Bank UAB") == ["revolut", "revolutbank"]
+
+
+
+@pytest.mark.parametrize("website, name, expected", [
+    ("http://www.kingsons.cn/", "GUANGZHOU KINGSONS BAGS TECHNOLOGY CO.,LTD", True),
+    ("https://www.csmegastore.dk/", "CS-Online A/S", True),
+    ("https://www.if.dk/", "IF SKADEFORSIKRING, FILIAL AF IF SKADEFÖRSÄKRING AB (PUBL), SVERIGE", True),
+    ("https://www.dsb.dk/", "DSB", True),
+    ("https://www.iidraudimas.lt/", "Revolut Bank UAB", False),
+    ("https://ai.studio/", "Google Cloud EMEA Limited", False),
+])
+def test_a_printed_website_may_name_the_supplier_by_any_word(website, name, expected):
+    assert printed_website_names_supplier(website, name) is expected
+
+
+def test_a_search_result_must_still_name_the_supplier_strictly():
+    assert website_names_supplier("http://www.kingsons.cn/", "GUANGZHOU KINGSONS BAGS TECHNOLOGY CO.,LTD") is False
+
+
+def test_name_words_drop_legal_forms_and_split_on_punctuation():
+    assert name_words("CS-Online A/S") == ["cs", "online"]

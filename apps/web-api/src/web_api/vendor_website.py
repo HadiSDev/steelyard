@@ -5,7 +5,7 @@ from sqlalchemy import func
 from sqlmodel import Session, select
 
 from web_api.db.models import Invoice, Vendor
-from web_api.website import website_names_supplier
+from web_api.website import printed_website_names_supplier
 
 
 def known_website(session: Session, vendor: Vendor) -> str | None:
@@ -22,4 +22,4 @@ def known_website(session: Session, vendor: Vendor) -> str | None:
         .group_by(Invoice.document_supplier_website)
         .order_by(func.count().desc(), Invoice.document_supplier_website)
     ).all()
-    return next((site for site in printed if website_names_supplier(site, vendor.name)), None)
+    return next((site for site in printed if printed_website_names_supplier(site, vendor.name)), None)

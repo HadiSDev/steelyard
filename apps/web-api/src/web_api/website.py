@@ -5,6 +5,7 @@ import re
 from urllib.parse import urlsplit
 
 MIN_KEY_LENGTH = 3
+MIN_WORD_LENGTH = 2
 
 LEGAL_FORMS = frozenset({
     "ab", "ag", "amba", "aps", "as", "bv", "co", "corp", "gmbh", "inc", "is",
@@ -58,3 +59,28 @@ def host_names_supplier(host: str, name: str) -> bool:
 def website_names_supplier(website: str, name: str) -> bool:
     """Whether the website's host names the supplier."""
     return host_names_supplier(urlsplit(website).hostname or "", name)
+
+
+def name_words(name: str) -> list[str]:
+    """The supplier's name split into words, legal forms dropped: "CS-Online A/S" gives cs, online."""
+    words = re.split(r"[^a-z0-9]+", name.lower().translate(_DANISH_LETTERS))
+    return [word for word in words if len(word) >= MIN_WORD_LENGTH and word not in LEGAL_FORMS]
+
+
+def printed_website_names_supplier(website: str, name: str) -> bool:
+    """Whether a website printed on the supplier's own invoice names it.
+
+    Looser than for a search result, since the supplier printed it: a label may also be any word
+    of the name, or begin with the name's first word.
+    """
+    if website_names_supplier(website, name):
+        return True
+    words = name_words(name)
+    if not words:
+        return False
+    host = (urlsplit(website).hostname or "").lower()
+    for label in host.split(".")[:-1]:
+        joined = label.replace("-", "")
+        if joined in words or joined.startswith(words[0]):
+            return True
+    return False
