@@ -9,6 +9,7 @@ from sqlmodel import Session, select
 
 from web_api.db.models import Company, ErpEntry, Invoice, InvoiceLine, SpendCategory, Vendor
 from web_api.vendor_spend import spend_by_vendor
+from web_api.vendor_website import known_website
 from ..auth.deps import TenantScope, get_session, resolve_company_ids, tenant_scope
 from ..schemas import VendorCategorySpendRead, VendorDetailRead, VendorInvoiceRead
 
@@ -44,7 +45,7 @@ def vendor_detail(
         vat_number=vendor.vat_number,
         description=vendor.description,
         description_source=vendor.description_source,
-        website=vendor.website,
+        website=known_website(session, vendor),
         invoice_count=invoice_count,
         first_invoice_date=first_date,
         last_invoice_date=last_date,

@@ -5,10 +5,10 @@ import logging
 from dataclasses import dataclass
 from typing import Callable
 
-from sqlalchemy import func
 from sqlmodel import Session, select
 
 from web_api.db.models import Invoice, Vendor
+from web_api.vendor_website import known_website
 
 from .. import config
 from .supplier_profile import SupplierProfile, describe_supplier
@@ -55,20 +55,6 @@ def vendors_needing_description(
     return list(session.exec(statement).all())
 
 
-def stated_website(session: Session, vendor: Vendor) -> str | None:
-    """The supplier's website as set on it, else the one its invoices print most often."""
-    if vendor.website:
-        return vendor.website
-    printed = session.exec(
-        select(Invoice.document_supplier_website)
-        .where(Invoice.vendor_id == vendor.id, Invoice.document_supplier_website.is_not(None))
-        .group_by(Invoice.document_supplier_website)
-        .order_by(func.count().desc(), Invoice.document_supplier_website)
-        .limit(1)
-    ).first()
-    return printed
-
-
 def describe_vendors(
     session: Session,
     *,
@@ -95,7 +81,7 @@ def describe_vendors(
             skipped += 1
             continue
         try:
-            profile = describe(vendor.name, vendor.country_code, stated_website(session, vendor))
+            profile = describe(vendor.name, vendor.country_code, known_website(session, vendor))
         except Exception as exc:  # noqa: BLE001
             logger.warning("could not describe %s: %s", vendor.name, exc)
             not_found += 1

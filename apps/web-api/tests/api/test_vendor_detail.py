@@ -189,3 +189,20 @@ def test_an_invoice_carries_the_voucher_it_was_posted_on(client, engine, supplie
     assert invoices[supplier["inv_a"]]["invoice_number"] == "A1"
     unposted = [i for i in invoices.values() if i["id"] != supplier["inv_a"]]
     assert all(i["voucher_number"] is None for i in unposted)
+
+
+def test_the_website_its_invoices_print_is_shown_until_one_is_set(client, engine, supplier):
+    with Session(engine) as s:
+        s.get(Vendor, supplier["acme"]).website = None
+        s.get(Invoice, supplier["inv_a"]).document_supplier_website = "https://acme.dk/"
+        s.commit()
+
+    assert _detail(client, supplier["acme"])["website"] == "https://acme.dk/"
+
+
+def test_a_website_set_on_the_supplier_wins_over_a_printed_one(client, engine, supplier):
+    with Session(engine) as s:
+        s.get(Invoice, supplier["inv_a"]).document_supplier_website = "https://acme.dk/"
+        s.commit()
+
+    assert _detail(client, supplier["acme"])["website"] == "https://acmesupplies.dk/"
