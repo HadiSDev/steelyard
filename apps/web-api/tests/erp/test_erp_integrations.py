@@ -8,76 +8,12 @@ from sqlmodel import Session, select
 
 from web_api import config as web_config
 from web_api import credentials
-from web_api.connectors import ErpAuthError, register_connector
-from web_api.connectors.base import CredentialField, ErpAccountData, ErpConnector
+from web_api.connectors.base import ErpAccountData
 from web_api.db.models import ErpAccount, ErpCredential, ErpEntry, Invoice
+from erp_fake_connectors import FakeErpConnector
 from web_api_testkit import auth
 
 SECRET = "super-secret-key-value"
-
-
-class _FakeConn(ErpConnector):
-    """Reachable ERP whose account chart can grow between calls."""
-
-    display_label = "Fake ERP"
-    credential_fields = [
-        CredentialField(name="base_url", label="Base URL", required=True),
-        CredentialField(name="api_key", label="API key", secret=True),
-    ]
-
-    accounts: list[ErpAccountData] = [
-        ErpAccountData(erp_account_code="6010", erp_account_name="Cloud", erp_account_type="expense", with_vat=True),
-        ErpAccountData(erp_account_code="6020", erp_account_name="Software", erp_account_type="expense", with_vat=True),
-    ]
-
-    def authorize(self) -> str:
-        return "t"
-
-    def test_connection(self) -> bool:
-        return True
-
-    def fetch_accounts(self):
-        return list(type(self).accounts)
-
-    def fetch_vendors(self, since=None):
-        return []
-
-    def fetch_invoices(self, since=None):
-        return []
-
-    def fetch_entries(self, since=None, account_codes=None):
-        return []
-
-    def fetch_invoice_scan(self, voucher_id):
-        return None
-
-    def fetch_invoice_document(self, voucher_id):
-        return None
-
-
-class _BadConn(_FakeConn):
-    def test_connection(self) -> bool:
-        raise RuntimeError("boom: unreachable")
-
-
-class _BadAuthConn(_FakeConn):
-    def test_connection(self) -> bool:
-        raise ErpAuthError("token tok_secret_123 expired")
-
-
-class _BrandedConn(_FakeConn):
-    """Declares the optional brand metadata, so the catalog can project it."""
-
-    display_label = "Branded ERP"
-    brand_slug = "branded"
-    description = "An ERP with a face."
-    docs_url = "https://example.invalid/docs"
-
-
-register_connector("faketest", _FakeConn)
-register_connector("faketest_bad", _BadConn)
-register_connector("faketest_branded", _BrandedConn)
-register_connector("faketest_badauth", _BadAuthConn)
 
 
 @pytest.fixture(autouse=True)
@@ -229,7 +165,7 @@ def test_refresh_adds_new_and_preserves_selection(client, seed, monkeypatch):
     a6010 = next(a for a in accts if a["erp_account_code"] == "6010")
     client.patch(f"/api/v1/erp-accounts/{a6010['id']}", headers=auth("tokA"),
                  json={"sync_enabled": False})
-    monkeypatch.setattr(_FakeConn, "accounts", _FakeConn.accounts + [
+    monkeypatch.setattr(FakeErpConnector, "accounts", FakeErpConnector.accounts + [
         ErpAccountData(erp_account_code="6600", erp_account_name="Consulting",
                        erp_account_type="expense", with_vat=True)])
 
@@ -250,7 +186,7 @@ def test_refresh_preserves_a_customers_vat_setting(client, seed, monkeypatch):
 
     client.patch(f"/api/v1/erp-accounts/{a6010['id']}", headers=auth("tokA"),
                  json={"with_vat": False})
-    monkeypatch.setattr(_FakeConn, "accounts", [
+    monkeypatch.setattr(FakeErpConnector, "accounts", [
         ErpAccountData(erp_account_code="6010", erp_account_name="Cloud Hosting (renamed)",
                        erp_account_type="expense", with_vat=True),
         ErpAccountData(erp_account_code="6020", erp_account_name="Software",
@@ -268,7 +204,7 @@ def test_a_newly_discovered_account_takes_the_erps_vat_value(client, seed, monke
     iid = _create(client, "tokA", seed["comp_a"]).json()["id"]
     client.post(f"/api/v1/erp-integrations/{iid}/refresh-accounts", headers=auth("tokA"))
 
-    monkeypatch.setattr(_FakeConn, "accounts", _FakeConn.accounts + [
+    monkeypatch.setattr(FakeErpConnector, "accounts", FakeErpConnector.accounts + [
         ErpAccountData(erp_account_code="1000", erp_account_name="Cash",
                        erp_account_type="asset", with_vat=False)])
     client.post(f"/api/v1/erp-integrations/{iid}/refresh-accounts", headers=auth("tokA"))

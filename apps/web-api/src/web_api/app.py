@@ -17,6 +17,7 @@ from web_api.routers import (
     invoice_lines,
     invoices,
     organization,
+    pipeline_runs,
     reports,
     spend_trees,
     users,
@@ -60,6 +61,7 @@ def create_app() -> FastAPI:
     app.include_router(erp_entries.router)
     app.include_router(erp_integrations.router)
     app.include_router(organization.router)
+    app.include_router(pipeline_runs.router)
     app.include_router(reports.router)
     app.include_router(spend_trees.router)
     app.include_router(users.router)

@@ -10,6 +10,7 @@ from .companies.deletion import (
 )
 from .companies.maintenance import FxRecomputeResult, RecategorizeResult
 from .companies.results import CompanyCreateResult, CompanyUpdateResult
+from .companies.runs import PipelineRunCreate, PipelineRunRead
 from .erp.accounts import ErpAccountRead, ErpAccountUpdate
 from .erp.actions import ConnectionTestResult, RefreshAccountsResult
 from .erp.catalog import CredentialFieldRead, ErpTypeRead
@@ -85,6 +86,8 @@ __all__ = [
     "OrganizationRead",
     "OrganizationUpdate",
     "Page",
+    "PipelineRunCreate",
+    "PipelineRunRead",
     "RecategorizeResult",
     "RefreshAccountsResult",
     "Report",

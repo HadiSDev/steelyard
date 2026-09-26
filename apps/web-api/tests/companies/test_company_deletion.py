@@ -14,6 +14,7 @@ from web_api.db.models import (
     File,
     Invoice,
     InvoiceLine,
+    PipelineRun,
     Recommendation,
     SpendCategory,
     SpendCategorySuggestion,
@@ -130,6 +131,19 @@ def test_every_company_scoped_table_is_emptied(client, voucher_seed, engine):
         assert s.exec(select(ErpAccount)).all() == []
         assert s.exec(select(ErpCredential)).all() == []
         assert s.exec(select(SyncState)).all() == []
+
+
+def test_the_companys_pipeline_runs_go_too(client, seed, engine):
+    company_id = seed["comp_a"]
+    with Session(engine) as s:
+        s.add(PipelineRun(company_id=company_id, kind="categorize", requested_by="userSys"))
+        s.add(PipelineRun(company_id=seed["comp_b"], kind="categorize", requested_by="userSys"))
+        s.commit()
+
+    assert _delete(client, company_id, confirm=True).status_code == 200
+
+    assert _count(engine, PipelineRun, company_id=company_id) == 0
+    assert _count(engine, PipelineRun, company_id=seed["comp_b"]) == 1
 
 
 def test_audit_rows_for_the_destroyed_entities_go_too(client, seed, engine):

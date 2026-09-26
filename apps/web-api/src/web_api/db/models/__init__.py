@@ -10,6 +10,12 @@ from .fx_rate import FxRate
 from .invoice import Invoice
 from .invoice_line import InvoiceLine
 from .organization import Organization
+from .pipeline_run import (
+    SYSTEM_REQUESTER,
+    PipelineRun,
+    PipelineRunKind,
+    PipelineRunStatus,
+)
 from .recommendation import Recommendation
 from .spend_category import SpendCategory
 from .spend_category_suggestion import (
@@ -38,6 +44,10 @@ __all__ = [
     "Invoice",
     "InvoiceLine",
     "Organization",
+    "PipelineRun",
+    "PipelineRunKind",
+    "PipelineRunStatus",
+    "SYSTEM_REQUESTER",
     "Recommendation",
     "SpendCategory",
     "SpendCategorySuggestion",

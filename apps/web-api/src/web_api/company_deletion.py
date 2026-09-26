@@ -17,6 +17,7 @@ from .db.models import (
     File,
     Invoice,
     InvoiceLine,
+    PipelineRun,
     Recommendation,
     SpendCategorySuggestion,
     SyncState,
@@ -104,6 +105,7 @@ def delete_company(session: Session, company: Company) -> CompanyRecords:
     session.exec(delete(Invoice).where(Invoice.company_id == company.id))
     session.exec(delete(File).where(File.company_id == company.id))
     session.exec(delete(Recommendation).where(Recommendation.company_id == company.id))
+    session.exec(delete(PipelineRun).where(PipelineRun.company_id == company.id))
     session.exec(
         delete(SpendCategorySuggestion).where(
             SpendCategorySuggestion.company_id == company.id
