@@ -1,4 +1,7 @@
-"""A supplier's site as one capped text: its home page and the pages about what it sells, cached by host."""
+"""A supplier's site as one capped text: its home page and the pages about what it sells, cached by host.
+
+Each page gets an equal share of the cap, so one long page cannot crowd out the others.
+"""
 from __future__ import annotations
 
 from typing import Callable
@@ -33,8 +36,9 @@ def crawl_site(
     def pick(links: list[str]) -> list[str]:
         return pages_to_crawl(root, links, max_pages)
 
-    pages = [page.strip() for page in fetch_site(root, pick)]
-    text = "\n\n".join(page for page in pages if page)[:max_chars]
+    pages = [page.strip() for page in fetch_site(root, pick) if page.strip()]
+    share = max_chars // max(len(pages), 1)
+    text = "\n\n".join(page[:share] for page in pages)
     if text:
         write_cache(cache_dir, key, text)
     return text

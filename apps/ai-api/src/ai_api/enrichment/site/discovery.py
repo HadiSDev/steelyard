@@ -22,9 +22,15 @@ BLOCKED_HOSTS = frozenset({
 })
 
 PAGE_KEYWORDS: tuple[tuple[str, ...], ...] = (
-    ("about", "om-os", "omos", "om_os", "company", "virksomhed", "who-we-are"),
+    ("about", "/om-", "omos", "om_os", "company", "virksomhed", "who-we-are"),
     ("product", "produkt", "sortiment", "catalog", "katalog"),
     ("service", "ydelse", "solution", "loesning", "losning", "løsning"),
+)
+
+SKIPPED_PAGE_WORDS = (
+    "privacy", "privat", "persondata", "cookie", "gdpr", "terms", "betingelser",
+    "vilkaar", "vilkår", "legal", "career", "karriere", "job", "news", "nyhed",
+    "presse", "press", "blog",
 )
 
 _DANISH_LETTERS = str.maketrans({"æ": "ae", "ø": "oe", "å": "aa", "ä": "ae", "ö": "oe", "ü": "ue"})
@@ -57,9 +63,9 @@ def find_website(name: str, results: list[dict]) -> str | None:
 
 
 def pages_to_crawl(root: str, links: list[str], limit: int) -> list[str]:
-    """Up to `limit` same-site pages about the company, its products or its services, in that order."""
+    """Up to `limit` same-site pages about the company, its products or its services, in that order, shallowest first."""
     root_host = _bare_host(urlsplit(root).hostname or "")
-    ranked: list[tuple[int, int, str]] = []
+    ranked: list[tuple[int, int, int, str]] = []
     seen: set[str] = set()
     for position, link in enumerate(links):
         parts = urlsplit(link)
@@ -74,9 +80,9 @@ def pages_to_crawl(root: str, links: list[str], limit: int) -> list[str]:
         seen.add(url)
         rank = _page_rank(path.lower())
         if rank is not None:
-            ranked.append((rank, position, url))
+            ranked.append((rank, path.count("/"), position, url))
     ranked.sort()
-    return [url for _, _, url in ranked[:limit]]
+    return [url for _, _, _, url in ranked[:limit]]
 
 
 def _is_blocked(host: str) -> bool:
@@ -100,7 +106,18 @@ def _bare_host(host: str) -> str:
 
 
 def _page_rank(path: str) -> int | None:
+    if _is_skipped(path):
+        return None
     for rank, keywords in enumerate(PAGE_KEYWORDS):
         if any(keyword in path for keyword in keywords):
             return rank
     return None
+
+
+def _is_skipped(path: str) -> bool:
+    words = [word for word in re.split(r"[/\-_.]", path) if word]
+    return any(
+        word.startswith(skipped) or word.endswith(skipped)
+        for word in words
+        for skipped in SKIPPED_PAGE_WORDS
+    )

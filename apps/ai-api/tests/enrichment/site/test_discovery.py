@@ -116,3 +116,34 @@ def test_the_home_page_and_repeats_are_not_listed_again():
     assert pages_to_crawl("https://danskkaffe.dk/", links, limit=3) == [
         "https://danskkaffe.dk/om-os",
     ]
+
+
+def test_a_shallow_about_page_is_preferred_over_a_deep_one():
+    links = [
+        "https://www.dsb.dk/om-dsb/baredygtighed/virksomheden/vorestog/",
+        "https://www.dsb.dk/om-dsb/",
+    ]
+
+    assert pages_to_crawl("https://www.dsb.dk/", links, limit=1) == [
+        "https://www.dsb.dk/om-dsb",
+    ]
+
+
+def test_legal_job_and_news_pages_are_never_read():
+    links = [
+        "https://www.dsb.dk/om-dsb/virksomheden/forretningsbetingelser/persondata/privatlivspolitik/",
+        "https://www.dsb.dk/om-dsb/job-og-karriere/",
+        "https://danskkaffe.dk/about/privacy-policy",
+        "https://danskkaffe.dk/company/news/2026",
+        "https://danskkaffe.dk/products/cookie-jar",
+    ]
+
+    assert pages_to_crawl("https://danskkaffe.dk/", links, limit=5) == []
+
+
+def test_a_skipped_word_inside_another_word_does_not_skip_the_page():
+    links = ["https://danskkaffe.dk/produkter/espresso", "https://danskkaffe.dk/om-os/handelsbetingelser"]
+
+    assert pages_to_crawl("https://danskkaffe.dk/", links, limit=5) == [
+        "https://danskkaffe.dk/produkter/espresso",
+    ]

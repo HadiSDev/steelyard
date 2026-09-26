@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CacheMode, CrawlerRunConfig
-from crawl4ai.content_filter_strategy import PruningContentFilter
+from crawl4ai.content_filter_strategy import PruningContentFilterLXML
 from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 
 from ... import config
@@ -34,12 +34,15 @@ async def _fetch_site(root: str, pick: PagePicker) -> list[str]:
 def _run_config() -> CrawlerRunConfig:
     return CrawlerRunConfig(
         markdown_generator=DefaultMarkdownGenerator(
-            content_filter=PruningContentFilter(threshold=0.45, threshold_type="dynamic"),
+            content_filter=PruningContentFilterLXML(threshold=0.45, threshold_type="dynamic"),
+            options={"ignore_links": True, "ignore_images": True},
         ),
         cache_mode=CacheMode.BYPASS,
         check_robots_txt=True,
         page_timeout=config.SUPPLIER_CRAWL_TIMEOUT_S * 1000,
-        excluded_tags=["nav", "footer", "header", "form"],
+        remove_consent_popups=True,
+        remove_overlay_elements=True,
+        excluded_tags=["form"],
         verbose=False,
     )
 

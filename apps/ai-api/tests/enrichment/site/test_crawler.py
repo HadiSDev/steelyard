@@ -47,13 +47,17 @@ def test_the_page_count_is_capped(tmp_path):
     assert "Beans" not in text
 
 
-def test_the_text_is_capped(tmp_path):
-    site = _coffee()
+def test_each_page_gets_an_equal_share_of_the_cap(tmp_path):
+    site = _Site(
+        "Home " * 100,
+        ["https://danskkaffe.dk/om-os", "https://danskkaffe.dk/produkter"],
+        {"https://danskkaffe.dk/om-os": "About " * 100, "https://danskkaffe.dk/produkter": "Beans."},
+    )
 
     text = crawl_site("https://danskkaffe.dk/", fetch_site=site.fetch,
-                      max_pages=3, max_chars=11, cache_dir=str(tmp_path))
+                      max_pages=3, max_chars=30, cache_dir=str(tmp_path))
 
-    assert text == "Dansk Kaffe"
+    assert text == "Home Home \n\nAbout Abou\n\nBeans."
 
 
 def test_a_cached_site_is_not_fetched_again(tmp_path):
