@@ -195,6 +195,10 @@ const VOUCHER: VoucherGroupRead = {
   doc_error: null,
   invoice_number: 'INV-2026-0412',
   document_invoice_number: 'INV-2026-0412',
+  totals_agree: true,
+  document_total: '1500.00',
+  invoice_total: '1500.00',
+  invoice_currency: 'DKK',
   entries: [
     entry({ id: 'e1', erp_account_code: '6200', erp_account_name: 'Software' }),
     entry({
@@ -291,6 +295,10 @@ const LONE: VoucherGroupRead = {
   doc_error: null,
   invoice_number: null,
   document_invoice_number: null,
+  totals_agree: null,
+  document_total: null,
+  invoice_total: null,
+  invoice_currency: null,
   entries: [
     entry({
       id: 'e9',

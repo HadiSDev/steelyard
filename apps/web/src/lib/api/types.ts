@@ -422,6 +422,13 @@ export interface VoucherGroupRead {
   invoice_number: string | null
   /** The number printed on the scan. */
   document_invoice_number: string | null
+  /** Whether the document's total matches the ERP's; null when there is nothing to compare. */
+  totals_agree: boolean | null
+  /** The total printed on the document, in the invoice's currency. */
+  document_total: Money | null
+  /** The total the ERP posted for the invoice, in the invoice's currency. */
+  invoice_total: Money | null
+  invoice_currency: string | null
 }
 
 /** Whether an invoice's attached document has been turned into lines. */

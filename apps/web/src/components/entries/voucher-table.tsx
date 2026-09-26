@@ -21,6 +21,7 @@ import { ConvertedAmount } from './converted-amount'
 import { LineStatusBadge } from './lines/line-status'
 import { ProvenanceMark } from './lines/provenance-mark'
 import { SpendCategory } from './lines/spend-category'
+import { TotalsMismatchMarker, TotalsMismatchRow } from './totals-mismatch'
 import { voucherLabel } from '#/lib/format/voucher'
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' })
@@ -329,11 +330,15 @@ export function VoucherTable({ groups, onSelectEntry }: VoucherTableProps) {
                   {formatDate(group.accounting_date)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <GroupAmount group={group} />
+                  <span className="inline-flex items-center gap-1.5">
+                    <TotalsMismatchMarker group={group} />
+                    <GroupAmount group={group} />
+                  </span>
                 </TableCell>
               </TableRow>
               {isOpen ? (
                 <>
+                  <TotalsMismatchRow group={group} />
                   <LineHeaderRow />
                   {lines.map((line) => (
                     <LineRow
