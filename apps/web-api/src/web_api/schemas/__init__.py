@@ -46,6 +46,7 @@ from .spend_trees.suggestions import (
 from .spend_trees.tree_edits import SpendTreeCreate, SpendTreeUpdate
 from .spend_trees.trees import SpendTreeDeleteResult, SpendTreeDetailRead, SpendTreeRead
 from .vendors import VendorRead
+from .vendor_overview import VendorOverviewRead, VendorSpendRead
 
 __all__ = [
     "AuditLogRead",
@@ -107,7 +108,9 @@ __all__ = [
     "SuggestionEvidenceRead",
     "SuggestionResolveResult",
     "UserRead",
+    "VendorOverviewRead",
     "VendorRead",
+    "VendorSpendRead",
     "VendorSpendRow",
     "VoucherAuditRead",
     "VoucherDetailRead",

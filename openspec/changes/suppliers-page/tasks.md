@@ -1,10 +1,10 @@
 ## 1. Supplier overview API (web-api)
 
-- [ ] 1.1 Add `VendorSpendRead` (currency, amount, unconverted_count) and `VendorOverviewRead` (id, name, country_code, vat_number, description, invoice_count, last_invoice_date, spend) schemas and export them
-- [ ] 1.2 Write failing tests for `GET /api/v1/vendors/overview`: only the caller's suppliers are listed; a shared supplier carries only the caller's figures; `company_id` narrows list and figures and a foreign company is 404
-- [ ] 1.3 Write failing tests for the figures: spend is net of VAT in base currency; an unconverted invoice is counted but not summed; two base currencies give two spend entries; `last_invoice_date` is the latest date
-- [ ] 1.4 Write failing tests for search (name and VAT number), each `sort`/`order`, name-then-id tie-breaking across pages, `page_size` capped at 100, and 422 for a spend sort across base currencies
-- [ ] 1.5 Implement the endpoint: one grouped query selecting the page of vendors with count, last date and the spend sort key; a second grouped query for spend per currency over that page's vendor ids
+- [x] 1.1 Add `VendorSpendRead` (currency, amount, unconverted_count) and `VendorOverviewRead` (id, name, country_code, vat_number, description, invoice_count, last_invoice_date, spend) schemas and export them
+- [x] 1.2 Write failing tests for `GET /api/v1/vendors/overview`: only the caller's suppliers are listed; a shared supplier carries only the caller's figures; `company_id` narrows list and figures and a foreign company is 404
+- [x] 1.3 Write failing tests for the figures: spend is net of VAT in base currency; an unconverted invoice is counted but not summed; two base currencies give two spend entries; `last_invoice_date` is the latest date
+- [x] 1.4 Write failing tests for search (name and VAT number), each `sort`/`order`, name-then-id tie-breaking across pages, `page_size` capped at 100, and 422 for a spend sort across base currencies
+- [x] 1.5 Implement the endpoint: one grouped query selecting the page of vendors with count, last date and the spend sort key; a second grouped query for spend per currency over that page's vendor ids
 
 ## 2. Data layer (web)
 
